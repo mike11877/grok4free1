@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="app_title">Чат с Grok</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Puter.js v2 -->
+    <script src="https://js.puter.com/v2/"></script>
+    <!-- OTHER -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+        }
+        /* Custom scrollbar for a cleaner look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #101010;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333333;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #444444;
+        }
+        /* Style for inputs */
+        .chat-input:focus {
+            outline: none;
+            box-shadow: none;
+            border-color: #8E2DE2;
+        }
+        /* Gradient button style */
+        .gradient-button {
+            background-image: linear-gradient(to right, #4A00E0, #8E2DE2);
+            transition: all 0.3s ease;
+        }
+        .gradient-button:hover {
+            box-shadow: 0 0 15px rgba(142, 45, 226, 0.5);
+        }
+        /* Animation for loading spinner */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        /* Prose styles for markdown rendering */
+        .prose {
+            color: #E5E7EB;
+        }
+        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+            color: #F9FAFB;
+        }
+        .prose a {
+            color: #A78BFA;
+        }
+        .prose code {
+            background-color: #1F2937;
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            border-radius: 3px;
+        }
+        .prose pre {
+            background-color: #111827;
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-200 flex h-screen">
+
+    <!-- Grok SVG Icon Definition -->
+    <svg width="0" height="0" style="display:none;">
+        <symbol id="grok-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2.6l2.35 4.76L19.4 8.5l-4.05 3.95.95 5.55L12 15.8l-4.3 2.2.95-5.55L4.6 8.5l5.05-1.14L12 2.6z M12 6.8l-1.4 2.85-3.15.7.25 3.05.6 3.45L12 14.7l2.7 1.4.6-3.45.25-3.05-3.15-.7L12 6.8z"/>
+        </symbol>
+    </svg>
+
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
+        <div class="bg-[#101010] border border-gray-800 p-8 rounded-xl shadow-2xl text-center max-w-sm mx-auto">
+            <h2 class="text-2xl font-bold mb-4 text-white" data-i18n="auth_title">Требуется аутентификация</h2>
+            <p class="mb-6 text-gray-400" data-i18n="auth_subtitle">Пожалуйста, войдите в свою учетную запись Puter, чтобы продолжить.</p>
+            <button id="signin-button" class="gradient-button text-white font-bold py-2.5 px-8 rounded-lg w-full" data-i18n="auth_button">
+                Войти
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Application Container -->
+    <div id="app-container" class="hidden flex w-full h-full">
+        <!-- Sidebar -->
+        <aside class="bg-[#101010] w-72 flex flex-col h-full p-4 border-r border-gray-800">
+            <button id="new-chat-button" class="w-full gradient-button text-white font-semibold py-2 px-4 rounded-lg mb-6 flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2"><use xlink:href="#grok-icon"/></svg>
+                <span data-i18n="new_chat_button">Новый чат</span>
+            </button>
+            <div class="flex-grow overflow-y-auto pr-2">
+                <h3 class="text-sm font-semibold mb-3 text-gray-500 px-2" data-i18n="history_title">История</h3>
+                <div id="chat-history" class="space-y-1">
+                    <!-- Chat history items will be populated here -->
+                </div>
+            </div>
+             <div class="mt-4 border-t border-gray-800 pt-4 space-y-4">
+                <div id="user-info" class="flex items-center px-2">
+                     <!-- User info will be populated here -->
+                </div>
+                <!-- Language Selector -->
+                <div>
+                    <label for="language-selector" class="text-sm font-semibold text-gray-500 mb-2 block px-2" data-i18n="language_label">Язык</label>
+                    <select id="language-selector" class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 p-2">
+                        <option value="ru">Русский</option>
+                        <option value="en">English</option>
+                        <option value="cn">中文</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Chat Area -->
+        <main class="flex-1 flex flex-col h-full bg-black">
+            <!-- System Prompt Section -->
+            <div class="p-4 border-b border-gray-800">
+                 <textarea id="system-prompt" rows="1" class="w-full bg-transparent border-0 rounded-lg p-2 text-gray-300 placeholder-gray-500 resize-none chat-input focus:ring-0" data-i18n-placeholder="system_prompt_placeholder" placeholder="Задайте инструкцию для AI..."></textarea>
+            </div>
+
+            <!-- Messages Display -->
+            <div id="chat-messages" class="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto">
+                <!-- Chat messages will be populated here -->
+            </div>
+
+            <!-- Message Input Form -->
+            <div class="p-4 bg-black">
+                <div class="bg-[#101010] border border-gray-800 rounded-xl p-2 flex items-end w-full max-w-4xl mx-auto">
+                    <button id="attach-file-button" class="p-3 text-gray-400 hover:text-white transition duration-300" data-i18n-title="attach_file_title" title="Прикрепить файл">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+                    </button>
+                    <textarea id="message-input" class="flex-1 bg-transparent text-gray-200 p-2 resize-none chat-input focus:ring-0" rows="1" data-i18n-placeholder="message_input_placeholder" placeholder="Спросите что-нибудь..."></textarea>
+                    <button id="send-button" class="p-2 gradient-button text-white rounded-lg ml-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                    </button>
+                </div>
+                 <div id="attachment-indicator-container" class="max-w-4xl mx-auto mt-2"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- Internationalization (i18n) ---
+        const translations = {
+            ru: {
+                app_title: "Чат с Grok",
+                auth_title: "Требуется аутентификация",
+                auth_subtitle: "Пожалуйста, войдите в свою учетную запись Puter, чтобы продолжить.",
+                auth_button: "Войти",
+                new_chat_button: "Новый чат",
+                history_title: "История",
+                language_label: "Язык",
+                system_prompt_placeholder: "Задайте инструкцию для AI...",
+                message_input_placeholder: "Спросите что-нибудь...",
+                attach_file_title: "Прикрепить файл",
+                welcome_message: "Как я могу помочь вам сегодня?",
+                start_dialogue: "Начните диалог, отправив сообщение.",
+                new_chat_title: "Новый чат",
+                user_role: "Вы",
+                assistant_role: "Grok",
+                attached_file: "Прикрепленный файл",
+                loading_file: "Загрузка...",
+                error_prefix: "Ошибка",
+                signin_failed: "Не удалось войти. Пожалуйста, попробуйте снова.",
+                chat_select_fail: "Пожалуйста, создайте или выберите чат.",
+                file_attach_fail: "Не удалось прикрепить файл:",
+            },
+            en: {
+                app_title: "Chat with Grok",
+                auth_title: "Authentication Required",
+                auth_subtitle: "Please sign in to your Puter account to continue.",
+                auth_button: "Sign In",
+                new_chat_button: "New Chat",
+                history_title: "History",
+                language_label: "Language",
+                system_prompt_placeholder: "Set instructions for the AI...",
+                message_input_placeholder: "Ask anything...",
+                attach_file_title: "Attach file",
+                welcome_message: "How can I help you today?",
+                start_dialogue: "Start the dialogue by sending a message.",
+                new_chat_title: "New Chat",
+                user_role: "You",
+                assistant_role: "Grok",
+                attached_file: "Attached file",
+                loading_file: "Uploading...",
+                error_prefix: "Error",
+                signin_failed: "Sign in failed. Please try again.",
+                chat_select_fail: "Please create or select a chat.",
+                file_attach_fail: "Failed to attach file:",
+            },
+            cn: {
+                app_title: "与 Grok 聊天",
+                auth_title: "需要认证",
+                auth_subtitle: "请登录您的 Puter 帐户以继续。",
+                auth_button: "登录",
+                new_chat_button: "新聊天",
+                history_title: "历史记录",
+                language_label: "语言",
+                system_prompt_placeholder: "为 AI 设置指令...",
+                message_input_placeholder: "问任何问题...",
+                attach_file_title: "附加文件",
+                welcome_message: "今天我能帮您做些什么？",
+                start_dialogue: "通过发送消息开始对话。",
+                new_chat_title: "新聊天",
+                user_role: "你",
+                assistant_role: "Grok",
+                attached_file: "附加文件",
+                loading_file: "上传中...",
+                error_prefix: "错误",
+                signin_failed: "登录失败。请再试一次。",
+                chat_select_fail: "请创建或选择一个聊天。",
+                file_attach_fail: "无法附加文件:",
+            }
+        };
+
+        let currentLanguage = 'ru';
+
+        async function setLanguage(lang) {
+            if (!translations[lang]) return;
+            currentLanguage = lang;
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.dataset.i18n;
+                el.textContent = translations[lang][key] || el.textContent;
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.dataset.i18nPlaceholder;
+                el.placeholder = translations[lang][key] || el.placeholder;
+            });
+            
+            document.querySelectorAll('[data-i18n-title]').forEach(el => {
+                const key = el.dataset.i18nTitle;
+                el.title = translations[lang][key] || el.title;
+            });
+            
+            document.documentElement.lang = lang;
+            document.querySelector('title').textContent = translations[lang].app_title;
+            
+            // Re-render messages with new language roles
+            if (activeChatId && chats[activeChatId]) {
+                 renderMessages(chats[activeChatId].messages);
+            }
+
+
+            await puter.kv.set('user-language', lang);
+        }
+
+        // DOM Elements
+        const authModal = document.getElementById('auth-modal');
+        const signInButton = document.getElementById('signin-button');
+        const appContainer = document.getElementById('app-container');
+        const userInfo = document.getElementById('user-info');
+        const newChatButton = document.getElementById('new-chat-button');
+        const chatHistoryContainer = document.getElementById('chat-history');
+        const systemPromptInput = document.getElementById('system-prompt');
+        const chatMessagesContainer = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const attachFileButton = document.getElementById('attach-file-button');
+        const sendButton = document.getElementById('send-button');
+        const attachmentIndicatorContainer = document.getElementById('attachment-indicator-container');
+        const languageSelector = document.getElementById('language-selector');
+
+        let activeChatId = null;
+        let chats = {};
+        let attachedFile = null;
+
+        // --- Initialization and Authentication ---
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (await puter.auth.isSignedIn()) {
+                showApp();
+                await initializeUser();
+            } else {
+                showAuth();
+                await setLanguage('ru'); // Set default language for auth screen
+            }
+            languageSelector.addEventListener('change', (e) => setLanguage(e.target.value));
+        });
+        
+        signInButton.addEventListener('click', async () => {
+            try {
+                await puter.auth.signIn();
+                showApp();
+                await initializeUser();
+            } catch (error) {
+                console.error('Sign in failed:', error);
+                alert(translations[currentLanguage].signin_failed);
+            }
+        });
+        
+        async function initializeUser() {
+            try {
+                const user = await puter.auth.getUser();
+                userInfo.innerHTML = `
+                    <svg class="w-8 h-8 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"></path></svg>
+                    <div>
+                        <p class="font-semibold text-sm text-white">${user.username}</p>
+                    </div>
+                `;
+                const savedLang = await puter.kv.get('user-language');
+                if (savedLang && translations[savedLang]) {
+                    languageSelector.value = savedLang;
+                    await setLanguage(savedLang);
+                } else {
+                    await setLanguage('ru');
+                }
+                await loadChats();
+            } catch (error) {
+                console.error("Failed to initialize user:", error);
+            }
+        }
+
+        // --- UI Management ---
+
+        function showAuth() {
+            authModal.classList.remove('hidden');
+            appContainer.classList.add('hidden');
+        }
+
+        function showApp() {
+            authModal.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            appContainer.classList.add('flex');
+        }
+
+        // --- Chat Management ---
+
+        async function loadChats() {
+            try {
+                const storedChats = await puter.kv.get('grok-chats');
+                chats = storedChats ? JSON.parse(storedChats) : {};
+                renderChatHistory();
+                const chatIds = Object.keys(chats);
+                if (chatIds.length > 0) {
+                    chatIds.sort((a, b) => chats[b].timestamp - chats[a].timestamp);
+                    selectChat(chatIds[0]);
+                } else {
+                    createNewChat();
+                }
+            } catch (error) {
+                console.error('Failed to load chats:', error);
+                createNewChat();
+            }
+        }
+
+        async function saveChats() {
+            try {
+                await puter.kv.set('grok-chats', JSON.stringify(chats));
+            } catch (error) {
+                console.error('Failed to save chats:', error);
+            }
+        }
+
+        newChatButton.addEventListener('click', createNewChat);
+
+        function createNewChat() {
+            const newChatId = `chat_${Date.now()}`;
+            chats[newChatId] = {
+                id: newChatId,
+                title: translations[currentLanguage].new_chat_title,
+                systemPrompt: '',
+                messages: [],
+                timestamp: Date.now()
+            };
+            activeChatId = newChatId;
+            renderChatHistory();
+            selectChat(newChatId);
+            saveChats();
+        }
+        
+        function selectChat(chatId) {
+            activeChatId = chatId;
+            const chat = chats[chatId];
+            if (!chat) return;
+
+            systemPromptInput.value = chat.systemPrompt || '';
+            renderMessages(chat.messages);
+            
+            document.querySelectorAll('.chat-history-item').forEach(item => {
+                item.classList.remove('bg-gray-700/50', 'text-white');
+                item.classList.add('text-gray-400');
+                if (item.dataset.chatId === chatId) {
+                    item.classList.add('bg-gray-700/50', 'text-white');
+                    item.classList.remove('text-gray-400');
+                }
+            });
+        }
+        
+        function renderChatHistory() {
+            chatHistoryContainer.innerHTML = '';
+            const chatIds = Object.keys(chats).sort((a, b) => chats[b].timestamp - chats[a].timestamp);
+            chatIds.forEach(chatId => {
+                const chat = chats[chatId];
+                const item = document.createElement('div');
+                item.className = 'chat-history-item p-2 rounded-md cursor-pointer hover:bg-gray-700/50 transition duration-200 text-gray-400 font-medium text-sm';
+                item.dataset.chatId = chatId;
+                item.textContent = chat.title;
+                item.onclick = () => selectChat(chatId);
+                chatHistoryContainer.appendChild(item);
+            });
+        }
+
+        function renderMessages(messages) {
+            chatMessagesContainer.innerHTML = '';
+            if (!messages || messages.length === 0) {
+                 chatMessagesContainer.innerHTML = `<div class="text-center text-gray-600 h-full flex flex-col items-center justify-center">
+                    <svg class="w-24 h-24 mb-4 text-gray-700"><use xlink:href="#grok-icon"/></svg>
+                    <h2 class="text-2xl font-bold text-gray-400">${translations[currentLanguage].welcome_message}</h2>
+                 </div>`;
+                 return;
+            }
+            messages.forEach(msg => addMessageToUI(msg.role, msg.content));
+        }
+        
+        function addMessageToUI(role, content, isStreaming = false) {
+            const messageWrapper = document.createElement('div');
+            const roleName = role === 'user' ? translations[currentLanguage].user_role : translations[currentLanguage].assistant_role;
+            
+            let messageContentHTML = '';
+            if (Array.isArray(content)) {
+                 content.forEach(part => {
+                     if (part.type === 'text') {
+                         messageContentHTML += marked.parse(part.text);
+                     } else if (part.type === 'file') {
+                         messageContentHTML += `<div class="bg-gray-800 border border-gray-700 p-2 rounded-md my-2 text-sm">${translations[currentLanguage].attached_file}: ${part.puter_path.split('/').pop()}</div>`;
+                     }
+                 });
+            } else {
+                 messageContentHTML = marked.parse(content);
+            }
+
+            const iconHTML = role === 'user' 
+                ? `<svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"></path></svg>`
+                : `<div class="w-8 h-8 flex items-center justify-center rounded-full gradient-button"><svg class="w-5 h-5 text-white"><use xlink:href="#grok-icon"/></svg></div>`;
+
+            messageWrapper.className = `flex items-start space-x-4 mb-6 message-wrapper max-w-4xl mx-auto ${role}`;
+            messageWrapper.innerHTML = `
+                <div class="flex-shrink-0 mt-1">${iconHTML}</div>
+                <div class="flex-1">
+                    <p class="font-bold mb-2 text-white">${roleName}</p>
+                    <div class="prose prose-invert max-w-none message-content">${messageContentHTML}</div>
+                </div>
+            `;
+            
+            if (isStreaming) messageWrapper.dataset.streaming = "true";
+
+            chatMessagesContainer.appendChild(messageWrapper);
+            scrollToBottom();
+        }
+        
+        // --- Message Sending and AI Interaction ---
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        async function sendMessage() {
+            const userInput = messageInput.value.trim();
+            if (!userInput && !attachedFile) return;
+            if (!activeChatId) {
+                alert(translations[currentLanguage].chat_select_fail);
+                return;
+            }
+
+            const currentChat = chats[activeChatId];
+            const userMessageContent = [];
+            if (attachedFile) {
+                userMessageContent.push({ type: 'file', puter_path: attachedFile.path });
+            }
+            if (userInput) {
+                userMessageContent.push({ type: 'text', text: userInput });
+            }
+
+            const userMessage = { role: 'user', content: userMessageContent };
+            
+            if (currentChat.messages.length === 0 && userInput) {
+                currentChat.title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
+                renderChatHistory();
+                selectChat(activeChatId);
+            }
+            
+            currentChat.messages.push(userMessage);
+            addMessageToUI(userMessage.role, userMessage.content);
+            
+            const apiMessages = [];
+            const systemPrompt = systemPromptInput.value.trim();
+            if (systemPrompt) apiMessages.push({ role: 'system', content: systemPrompt });
+            
+            apiMessages.push(...currentChat.messages.map(m => {
+                if (Array.isArray(m.content) && m.content.length === 1 && m.content[0].type === 'text') {
+                    return { role: m.role, content: m.content[0].text };
+                }
+                return m;
+            }));
+
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            attachedFile = null;
+            updateAttachmentUI();
+            
+            addMessageToUI('assistant', `<svg class="w-6 h-6 spinner text-purple-400"><use xlink:href="#grok-icon"/></svg>`, true);
+
+            try {
+                const stream = await puter.ai.chat(apiMessages, {
+                    model: 'x-ai/grok-4',
+                    stream: true
+                });
+
+                let fullResponse = '';
+                const streamingMessageDiv = document.querySelector('[data-streaming="true"] .message-content');
+
+                for await (const part of stream) {
+                    fullResponse += part?.text || '';
+                    if (streamingMessageDiv) {
+                        streamingMessageDiv.innerHTML = marked.parse(fullResponse + '▍');
+                    }
+                    scrollToBottom();
+                }
+                
+                if (streamingMessageDiv) {
+                     streamingMessageDiv.innerHTML = marked.parse(fullResponse);
+                     streamingMessageDiv.parentElement.parentElement.removeAttribute('data-streaming');
+                }
+
+                currentChat.messages.push({ role: 'assistant', content: fullResponse });
+                await saveChats();
+
+            } catch (error) {
+                console.error('Error calling AI:', error);
+                const errorDiv = document.querySelector('[data-streaming="true"] .message-content');
+                if(errorDiv) {
+                    errorDiv.innerHTML = `<p class="text-red-400"><strong>${translations[currentLanguage].error_prefix}:</strong> ${error.message}</p>`;
+                    errorDiv.parentElement.parentElement.removeAttribute('data-streaming');
+                }
+            }
+        }
+
+        // --- File Attachment ---
+        
+        attachFileButton.addEventListener('click', async () => {
+            try {
+                const fileHandle = await puter.ui.showOpenFilePicker();
+                if (fileHandle) {
+                    updateAttachmentUI(translations[currentLanguage].loading_file);
+                    const fileContent = await fileHandle.read();
+                    const puterFile = await puter.fs.write(`grok_attachments/${Date.now()}_${fileHandle.name}`, fileContent, { createMissingParents: true });
+                    attachedFile = puterFile;
+                    updateAttachmentUI(puterFile.name);
+                }
+            } catch (error) {
+                console.error('File picking or upload failed:', error);
+                alert(`${translations[currentLanguage].file_attach_fail} ${error.message}`);
+                updateAttachmentUI();
+            }
+        });
+        
+        function updateAttachmentUI(fileName = null) {
+            attachmentIndicatorContainer.innerHTML = '';
+            if (fileName) {
+                const attachmentIndicator = document.createElement('div');
+                attachmentIndicator.className = 'bg-purple-600/20 text-purple-300 text-xs px-3 py-1 rounded-full inline-flex items-center';
+                attachmentIndicator.innerHTML = `
+                    <span>${fileName}</span>
+                    <button id="remove-attachment" class="ml-2 text-purple-200 hover:text-white">&times;</button>
+                `;
+                attachmentIndicatorContainer.appendChild(attachmentIndicator);
+                document.getElementById('remove-attachment').onclick = () => {
+                    attachedFile = null;
+                    updateAttachmentUI();
+                };
+            }
+        }
+
+        // --- Utility Functions ---
+        
+        function scrollToBottom() {
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            const newHeight = Math.min(messageInput.scrollHeight, 200);
+            messageInput.style.height = newHeight + 'px';
+        });
+
+        systemPromptInput.addEventListener('change', () => {
+            if (activeChatId && chats[activeChatId]) {
+                chats[activeChatId].systemPrompt = systemPromptInput.value;
+                saveChats();
+            }
+        });
+
+    </script>
+</body>
+</html>
