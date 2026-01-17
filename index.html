@@ -1,617 +1,841 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title data-i18n="app_title">Чат с Grok</title>
-    <!-- Tailwind CSS -->
+    <title>Sudoku Master - Learn & Play</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Puter.js v2 -->
-    <script src="https://js.puter.com/v2/"></script>
-    <!-- OTHER -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #000000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
         }
-        /* Custom scrollbar for a cleaner look */
-        ::-webkit-scrollbar {
-            width: 6px;
+
+        .sudoku-cell {
+            aspect-ratio: 1;
+            transition: all 0.2s ease;
         }
-        ::-webkit-scrollbar-track {
-            background: #101010;
+
+        .sudoku-cell:hover:not(.given):not(:disabled) {
+            background: #374151 !important;
+            transform: scale(1.05);
         }
-        ::-webkit-scrollbar-thumb {
-            background: #333333;
-            border-radius: 10px;
+
+        .sudoku-cell.given {
+            background: #1f2937;
+            color: #9ca3af;
+            font-weight: 600;
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #444444;
+
+        .sudoku-cell.error {
+            background: #991b1b !important;
+            animation: shake 0.3s;
         }
-        /* Style for inputs */
-        .chat-input:focus {
-            outline: none;
-            box-shadow: none;
-            border-color: #8E2DE2;
+
+        .sudoku-cell.hint-target {
+            background: #065f46 !important;
+            animation: pulse 1s infinite;
         }
-        /* Gradient button style */
+
+        .sudoku-cell.hint-related {
+            background: #1e3a5f !important;
+        }
+
+        .sudoku-cell.selected {
+            background: #1e40af !important;
+            box-shadow: 0 0 0 3px #3b82f6;
+        }
+
+        .thick-border-right {
+            border-right: 3px solid #4b5563 !important;
+        }
+
+        .thick-border-bottom {
+            border-bottom: 3px solid #4b5563 !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hint-panel {
+            animation: slideIn 0.3s ease;
+        }
+
+        .notes-mode .sudoku-cell {
+            font-size: 0.6rem;
+            line-height: 1;
+        }
+
         .gradient-button {
-            background-image: linear-gradient(to right, #4A00E0, #8E2DE2);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             transition: all 0.3s ease;
         }
+
         .gradient-button:hover {
-            box-shadow: 0 0 15px rgba(142, 45, 226, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
-        /* Animation for loading spinner */
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
-        .spinner {
-            animation: spin 1s linear infinite;
-        }
-        /* Prose styles for markdown rendering */
-        .prose {
-            color: #E5E7EB;
-        }
-        .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
-            color: #F9FAFB;
-        }
-        .prose a {
-            color: #A78BFA;
-        }
-        .prose code {
-            background-color: #1F2937;
-            padding: 0.2em 0.4em;
-            margin: 0;
-            font-size: 85%;
-            border-radius: 3px;
-        }
-        .prose pre {
-            background-color: #111827;
-            border: 1px solid #374151;
-        }
+
+        .easy { background: #065f46; color: #d1fae5; }
+        .medium { background: #c2410c; color: #fed7aa; }
+        .hard { background: #991b1b; color: #fecaca; }
     </style>
 </head>
-<body class="bg-black text-gray-200 flex h-screen">
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Sudoku Master
+            </h1>
+            <p class="text-gray-400">Learn Sudoku with intelligent hints and explanations</p>
+        </div>
 
-    <!-- Grok SVG Icon Definition -->
-    <svg width="0" height="0" style="display:none;">
-        <symbol id="grok-icon" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M12 2.6l2.35 4.76L19.4 8.5l-4.05 3.95.95 5.55L12 15.8l-4.3 2.2.95-5.55L4.6 8.5l5.05-1.14L12 2.6z M12 6.8l-1.4 2.85-3.15.7.25 3.05.6 3.45L12 14.7l2.7 1.4.6-3.45.25-3.05-3.15-.7L12 6.8z"/>
-        </symbol>
-    </svg>
+        <div class="grid lg:grid-cols-3 gap-6">
+            <!-- Left Panel - Controls -->
+            <div class="space-y-4">
+                <!-- Game Info Card -->
+                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="text-gray-400 text-sm">Difficulty</span>
+                            <div class="mt-1">
+                                <span id="difficulty-display" class="difficulty-badge easy">Easy</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-400 text-sm">Time</span>
+                            <div id="timer" class="text-2xl font-bold text-purple-400 mt-1">00:00</div>
+                        </div>
+                    </div>
 
-    <!-- Authentication Modal -->
-    <div id="auth-modal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-        <div class="bg-[#101010] border border-gray-800 p-8 rounded-xl shadow-2xl text-center max-w-sm mx-auto">
-            <h2 class="text-2xl font-bold mb-4 text-white" data-i18n="auth_title">Требуется аутентификация</h2>
-            <p class="mb-6 text-gray-400" data-i18n="auth_subtitle">Пожалуйста, войдите в свою учетную запись Puter, чтобы продолжить.</p>
-            <button id="signin-button" class="gradient-button text-white font-bold py-2.5 px-8 rounded-lg w-full" data-i18n="auth_button">
-                Войти
-            </button>
+                    <div class="grid grid-cols-3 gap-2 mb-4">
+                        <button onclick="startNewGame('easy')" class="bg-green-900 hover:bg-green-800 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
+                            Easy
+                        </button>
+                        <button onclick="startNewGame('medium')" class="bg-orange-900 hover:bg-orange-800 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
+                            Medium
+                        </button>
+                        <button onclick="startNewGame('hard')" class="bg-red-900 hover:bg-red-800 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
+                            Hard
+                        </button>
+                    </div>
+
+                    <button onclick="startNewGame(currentDifficulty)" class="w-full gradient-button text-white font-bold py-3 px-6 rounded-lg mb-2">
+                        New Game
+                    </button>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="toggleNotesMode()" id="notes-btn" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                            📝 Notes
+                        </button>
+                        <button onclick="checkSolution()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                            ✓ Check
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hint System Card -->
+                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
+                    <h3 class="text-lg font-bold mb-3 text-purple-400">💡 Smart Hints</h3>
+                    <p class="text-sm text-gray-400 mb-4">Get progressive help when you're stuck</p>
+
+                    <div class="space-y-2">
+                        <button onclick="getHint(1)" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                            1️⃣ Gentle Nudge
+                        </button>
+                        <button onclick="getHint(2)" class="w-full bg-indigo-900 hover:bg-indigo-800 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                            2️⃣ Show Technique
+                        </button>
+                        <button onclick="getHint(3)" class="w-full bg-purple-900 hover:bg-purple-800 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                            3️⃣ Show Answer
+                        </button>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-gray-900 rounded-lg">
+                        <div class="flex justify-between text-xs text-gray-400 mb-1">
+                            <span>Hints Used</span>
+                            <span id="hint-count">0</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-2">
+                            <div id="hint-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Card -->
+                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
+                    <h3 class="text-lg font-bold mb-3 text-purple-400">📊 Your Progress</h3>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Games Completed</span>
+                            <span id="games-completed" class="font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Best Time (Easy)</span>
+                            <span id="best-time-easy" class="font-bold">--:--</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-400">Learning Level</span>
+                            <span id="learning-level" class="font-bold text-purple-400">Beginner</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Panel - Sudoku Grid -->
+            <div class="lg:col-span-2">
+                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
+                    <div id="sudoku-grid" class="grid grid-cols-9 gap-0 mb-6 bg-gray-700 p-1 rounded-lg">
+                        <!-- Grid will be generated by JavaScript -->
+                    </div>
+
+                    <!-- Hint Display Panel -->
+                    <div id="hint-panel" class="hidden hint-panel bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500 rounded-xl p-6 mb-4">
+                        <div class="flex items-start">
+                            <div class="text-3xl mr-4">🎓</div>
+                            <div class="flex-1">
+                                <h4 id="hint-title" class="text-lg font-bold mb-2 text-purple-300">Hint</h4>
+                                <p id="hint-text" class="text-gray-200 leading-relaxed"></p>
+                            </div>
+                            <button onclick="closeHint()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- Number Pad -->
+                    <div class="grid grid-cols-9 gap-2">
+                        <button onclick="selectNumber(1)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">1</button>
+                        <button onclick="selectNumber(2)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">2</button>
+                        <button onclick="selectNumber(3)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">3</button>
+                        <button onclick="selectNumber(4)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">4</button>
+                        <button onclick="selectNumber(5)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">5</button>
+                        <button onclick="selectNumber(6)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">6</button>
+                        <button onclick="selectNumber(7)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">7</button>
+                        <button onclick="selectNumber(8)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">8</button>
+                        <button onclick="selectNumber(9)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">9</button>
+                    </div>
+
+                    <button onclick="selectNumber(0)" class="w-full mt-2 bg-red-900 hover:bg-red-800 text-white font-bold py-3 rounded-lg transition">
+                        Clear Cell
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Main Application Container -->
-    <div id="app-container" class="hidden flex w-full h-full">
-        <!-- Sidebar -->
-        <aside class="bg-[#101010] w-72 flex flex-col h-full p-4 border-r border-gray-800">
-            <button id="new-chat-button" class="w-full gradient-button text-white font-semibold py-2 px-4 rounded-lg mb-6 flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2"><use xlink:href="#grok-icon"/></svg>
-                <span data-i18n="new_chat_button">Новый чат</span>
-            </button>
-            <div class="flex-grow overflow-y-auto pr-2">
-                <h3 class="text-sm font-semibold mb-3 text-gray-500 px-2" data-i18n="history_title">История</h3>
-                <div id="chat-history" class="space-y-1">
-                    <!-- Chat history items will be populated here -->
-                </div>
-            </div>
-             <div class="mt-4 border-t border-gray-800 pt-4 space-y-4">
-                <div id="user-info" class="flex items-center px-2">
-                     <!-- User info will be populated here -->
-                </div>
-                <!-- Language Selector -->
-                <div>
-                    <label for="language-selector" class="text-sm font-semibold text-gray-500 mb-2 block px-2" data-i18n="language_label">Язык</label>
-                    <select id="language-selector" class="w-full bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 p-2">
-                        <option value="ru">Русский</option>
-                        <option value="en">English</option>
-                        <option value="cn">中文</option>
-                    </select>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Chat Area -->
-        <main class="flex-1 flex flex-col h-full bg-black">
-            <!-- System Prompt Section -->
-            <div class="p-4 border-b border-gray-800">
-                 <textarea id="system-prompt" rows="1" class="w-full bg-transparent border-0 rounded-lg p-2 text-gray-300 placeholder-gray-500 resize-none chat-input focus:ring-0" data-i18n-placeholder="system_prompt_placeholder" placeholder="Задайте инструкцию для AI..."></textarea>
-            </div>
-
-            <!-- Messages Display -->
-            <div id="chat-messages" class="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto">
-                <!-- Chat messages will be populated here -->
-            </div>
-
-            <!-- Message Input Form -->
-            <div class="p-4 bg-black">
-                <div class="bg-[#101010] border border-gray-800 rounded-xl p-2 flex items-end w-full max-w-4xl mx-auto">
-                    <button id="attach-file-button" class="p-3 text-gray-400 hover:text-white transition duration-300" data-i18n-title="attach_file_title" title="Прикрепить файл">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
-                    </button>
-                    <textarea id="message-input" class="flex-1 bg-transparent text-gray-200 p-2 resize-none chat-input focus:ring-0" rows="1" data-i18n-placeholder="message_input_placeholder" placeholder="Спросите что-нибудь..."></textarea>
-                    <button id="send-button" class="p-2 gradient-button text-white rounded-lg ml-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
-                    </button>
-                </div>
-                 <div id="attachment-indicator-container" class="max-w-4xl mx-auto mt-2"></div>
-            </div>
-        </main>
-    </div>
-
     <script>
-        // --- Internationalization (i18n) ---
-        const translations = {
-            ru: {
-                app_title: "Чат с Grok",
-                auth_title: "Требуется аутентификация",
-                auth_subtitle: "Пожалуйста, войдите в свою учетную запись Puter, чтобы продолжить.",
-                auth_button: "Войти",
-                new_chat_button: "Новый чат",
-                history_title: "История",
-                language_label: "Язык",
-                system_prompt_placeholder: "Задайте инструкцию для AI...",
-                message_input_placeholder: "Спросите что-нибудь...",
-                attach_file_title: "Прикрепить файл",
-                welcome_message: "Как я могу помочь вам сегодня?",
-                start_dialogue: "Начните диалог, отправив сообщение.",
-                new_chat_title: "Новый чат",
-                user_role: "Вы",
-                assistant_role: "Grok",
-                attached_file: "Прикрепленный файл",
-                loading_file: "Загрузка...",
-                error_prefix: "Ошибка",
-                signin_failed: "Не удалось войти. Пожалуйста, попробуйте снова.",
-                chat_select_fail: "Пожалуйста, создайте или выберите чат.",
-                file_attach_fail: "Не удалось прикрепить файл:",
-            },
-            en: {
-                app_title: "Chat with Grok",
-                auth_title: "Authentication Required",
-                auth_subtitle: "Please sign in to your Puter account to continue.",
-                auth_button: "Sign In",
-                new_chat_button: "New Chat",
-                history_title: "History",
-                language_label: "Language",
-                system_prompt_placeholder: "Set instructions for the AI...",
-                message_input_placeholder: "Ask anything...",
-                attach_file_title: "Attach file",
-                welcome_message: "How can I help you today?",
-                start_dialogue: "Start the dialogue by sending a message.",
-                new_chat_title: "New Chat",
-                user_role: "You",
-                assistant_role: "Grok",
-                attached_file: "Attached file",
-                loading_file: "Uploading...",
-                error_prefix: "Error",
-                signin_failed: "Sign in failed. Please try again.",
-                chat_select_fail: "Please create or select a chat.",
-                file_attach_fail: "Failed to attach file:",
-            },
-            cn: {
-                app_title: "与 Grok 聊天",
-                auth_title: "需要认证",
-                auth_subtitle: "请登录您的 Puter 帐户以继续。",
-                auth_button: "登录",
-                new_chat_button: "新聊天",
-                history_title: "历史记录",
-                language_label: "语言",
-                system_prompt_placeholder: "为 AI 设置指令...",
-                message_input_placeholder: "问任何问题...",
-                attach_file_title: "附加文件",
-                welcome_message: "今天我能帮您做些什么？",
-                start_dialogue: "通过发送消息开始对话。",
-                new_chat_title: "新聊天",
-                user_role: "你",
-                assistant_role: "Grok",
-                attached_file: "附加文件",
-                loading_file: "上传中...",
-                error_prefix: "错误",
-                signin_failed: "登录失败。请再试一次。",
-                chat_select_fail: "请创建或选择一个聊天。",
-                file_attach_fail: "无法附加文件:",
-            }
+        // Game State
+        let puzzle = [];
+        let solution = [];
+        let userBoard = [];
+        let selectedCell = null;
+        let currentDifficulty = 'easy';
+        let timerInterval = null;
+        let seconds = 0;
+        let hintsUsed = 0;
+        let notesMode = false;
+        let cellNotes = {};
+        let stats = {
+            gamesCompleted: 0,
+            bestTimeEasy: null,
+            bestTimeMedium: null,
+            bestTimeHard: null,
+            totalHintsUsed: 0
         };
 
-        let currentLanguage = 'ru';
-
-        async function setLanguage(lang) {
-            if (!translations[lang]) return;
-            currentLanguage = lang;
-            
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.dataset.i18n;
-                el.textContent = translations[lang][key] || el.textContent;
-            });
-
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.dataset.i18nPlaceholder;
-                el.placeholder = translations[lang][key] || el.placeholder;
-            });
-            
-            document.querySelectorAll('[data-i18n-title]').forEach(el => {
-                const key = el.dataset.i18nTitle;
-                el.title = translations[lang][key] || el.title;
-            });
-            
-            document.documentElement.lang = lang;
-            document.querySelector('title').textContent = translations[lang].app_title;
-            
-            // Re-render messages with new language roles
-            if (activeChatId && chats[activeChatId]) {
-                 renderMessages(chats[activeChatId].messages);
+        // Load stats from localStorage
+        function loadStats() {
+            const saved = localStorage.getItem('sudokuStats');
+            if (saved) {
+                stats = JSON.parse(saved);
+                updateStatsDisplay();
             }
-
-
-            await puter.kv.set('user-language', lang);
         }
 
-        // DOM Elements
-        const authModal = document.getElementById('auth-modal');
-        const signInButton = document.getElementById('signin-button');
-        const appContainer = document.getElementById('app-container');
-        const userInfo = document.getElementById('user-info');
-        const newChatButton = document.getElementById('new-chat-button');
-        const chatHistoryContainer = document.getElementById('chat-history');
-        const systemPromptInput = document.getElementById('system-prompt');
-        const chatMessagesContainer = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
-        const attachFileButton = document.getElementById('attach-file-button');
-        const sendButton = document.getElementById('send-button');
-        const attachmentIndicatorContainer = document.getElementById('attachment-indicator-container');
-        const languageSelector = document.getElementById('language-selector');
+        function saveStats() {
+            localStorage.setItem('sudokuStats', JSON.stringify(stats));
+        }
 
-        let activeChatId = null;
-        let chats = {};
-        let attachedFile = null;
+        function updateStatsDisplay() {
+            document.getElementById('games-completed').textContent = stats.gamesCompleted;
+            document.getElementById('best-time-easy').textContent = stats.bestTimeEasy ? formatTime(stats.bestTimeEasy) : '--:--';
 
-        // --- Initialization and Authentication ---
+            // Update learning level based on performance
+            let level = 'Beginner';
+            if (stats.gamesCompleted > 5) level = 'Learner';
+            if (stats.gamesCompleted > 15) level = 'Intermediate';
+            if (stats.gamesCompleted > 30) level = 'Advanced';
+            document.getElementById('learning-level').textContent = level;
+        }
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (await puter.auth.isSignedIn()) {
-                showApp();
-                await initializeUser();
-            } else {
-                showAuth();
-                await setLanguage('ru'); // Set default language for auth screen
-            }
-            languageSelector.addEventListener('change', (e) => setLanguage(e.target.value));
-        });
-        
-        signInButton.addEventListener('click', async () => {
-            try {
-                await puter.auth.signIn();
-                showApp();
-                await initializeUser();
-            } catch (error) {
-                console.error('Sign in failed:', error);
-                alert(translations[currentLanguage].signin_failed);
-            }
-        });
-        
-        async function initializeUser() {
-            try {
-                const user = await puter.auth.getUser();
-                userInfo.innerHTML = `
-                    <svg class="w-8 h-8 text-gray-500 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"></path></svg>
-                    <div>
-                        <p class="font-semibold text-sm text-white">${user.username}</p>
-                    </div>
-                `;
-                const savedLang = await puter.kv.get('user-language');
-                if (savedLang && translations[savedLang]) {
-                    languageSelector.value = savedLang;
-                    await setLanguage(savedLang);
-                } else {
-                    await setLanguage('ru');
+        // Initialize
+        function init() {
+            loadStats();
+            createGrid();
+            startNewGame('easy');
+        }
+
+        // Create Sudoku Grid UI
+        function createGrid() {
+            const grid = document.getElementById('sudoku-grid');
+            grid.innerHTML = '';
+
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    const cell = document.createElement('input');
+                    cell.type = 'text';
+                    cell.maxLength = 1;
+                    cell.className = 'sudoku-cell bg-gray-900 text-white text-center text-2xl font-bold border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500';
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+
+                    // Add thick borders for 3x3 boxes
+                    if (col === 2 || col === 5) cell.classList.add('thick-border-right');
+                    if (row === 2 || row === 5) cell.classList.add('thick-border-bottom');
+
+                    cell.addEventListener('click', () => selectCell(row, col));
+                    cell.addEventListener('input', (e) => handleInput(e, row, col));
+                    cell.addEventListener('keydown', (e) => handleKeydown(e, row, col));
+
+                    grid.appendChild(cell);
                 }
-                await loadChats();
-            } catch (error) {
-                console.error("Failed to initialize user:", error);
             }
         }
 
-        // --- UI Management ---
+        // Sudoku Generator
+        function generateSudoku() {
+            // Create a solved board
+            const board = Array(9).fill(null).map(() => Array(9).fill(0));
+            fillBoard(board);
+            solution = board.map(row => [...row]);
 
-        function showAuth() {
-            authModal.classList.remove('hidden');
-            appContainer.classList.add('hidden');
-        }
-
-        function showApp() {
-            authModal.classList.add('hidden');
-            appContainer.classList.remove('hidden');
-            appContainer.classList.add('flex');
-        }
-
-        // --- Chat Management ---
-
-        async function loadChats() {
-            try {
-                const storedChats = await puter.kv.get('grok-chats');
-                chats = storedChats ? JSON.parse(storedChats) : {};
-                renderChatHistory();
-                const chatIds = Object.keys(chats);
-                if (chatIds.length > 0) {
-                    chatIds.sort((a, b) => chats[b].timestamp - chats[a].timestamp);
-                    selectChat(chatIds[0]);
-                } else {
-                    createNewChat();
-                }
-            } catch (error) {
-                console.error('Failed to load chats:', error);
-                createNewChat();
-            }
-        }
-
-        async function saveChats() {
-            try {
-                await puter.kv.set('grok-chats', JSON.stringify(chats));
-            } catch (error) {
-                console.error('Failed to save chats:', error);
-            }
-        }
-
-        newChatButton.addEventListener('click', createNewChat);
-
-        function createNewChat() {
-            const newChatId = `chat_${Date.now()}`;
-            chats[newChatId] = {
-                id: newChatId,
-                title: translations[currentLanguage].new_chat_title,
-                systemPrompt: '',
-                messages: [],
-                timestamp: Date.now()
+            // Remove numbers based on difficulty
+            const clues = {
+                'easy': 40,
+                'medium': 30,
+                'hard': 25
             };
-            activeChatId = newChatId;
-            renderChatHistory();
-            selectChat(newChatId);
-            saveChats();
-        }
-        
-        function selectChat(chatId) {
-            activeChatId = chatId;
-            const chat = chats[chatId];
-            if (!chat) return;
 
-            systemPromptInput.value = chat.systemPrompt || '';
-            renderMessages(chat.messages);
-            
-            document.querySelectorAll('.chat-history-item').forEach(item => {
-                item.classList.remove('bg-gray-700/50', 'text-white');
-                item.classList.add('text-gray-400');
-                if (item.dataset.chatId === chatId) {
-                    item.classList.add('bg-gray-700/50', 'text-white');
-                    item.classList.remove('text-gray-400');
+            puzzle = solution.map(row => [...row]);
+            const cellsToRemove = 81 - clues[currentDifficulty];
+
+            for (let i = 0; i < cellsToRemove; i++) {
+                let row, col;
+                do {
+                    row = Math.floor(Math.random() * 9);
+                    col = Math.floor(Math.random() * 9);
+                } while (puzzle[row][col] === 0);
+                puzzle[row][col] = 0;
+            }
+
+            userBoard = puzzle.map(row => [...row]);
+        }
+
+        function fillBoard(board) {
+            const numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (board[row][col] === 0) {
+                        shuffle(numbers);
+                        for (let num of numbers) {
+                            if (isValid(board, row, col, num)) {
+                                board[row][col] = num;
+                                if (fillBoard(board)) return true;
+                                board[row][col] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        function isValid(board, row, col, num) {
+            // Check row
+            for (let x = 0; x < 9; x++) {
+                if (board[row][x] === num) return false;
+            }
+
+            // Check column
+            for (let x = 0; x < 9; x++) {
+                if (board[x][col] === num) return false;
+            }
+
+            // Check 3x3 box
+            const startRow = Math.floor(row / 3) * 3;
+            const startCol = Math.floor(col / 3) * 3;
+            for (let i = 0; i < 3; i++) {
+                for (let j = 0; j < 3; j++) {
+                    if (board[startRow + i][startCol + j] === num) return false;
+                }
+            }
+
+            return true;
+        }
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Game Control
+        function startNewGame(difficulty) {
+            currentDifficulty = difficulty;
+            hintsUsed = 0;
+            seconds = 0;
+            notesMode = false;
+            cellNotes = {};
+            updateHintDisplay();
+
+            // Update difficulty display
+            const badge = document.getElementById('difficulty-display');
+            badge.textContent = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+            badge.className = 'difficulty-badge ' + difficulty;
+
+            document.getElementById('notes-btn').classList.remove('bg-purple-600');
+            document.getElementById('notes-btn').classList.add('bg-gray-700');
+
+            generateSudoku();
+            renderBoard();
+            startTimer();
+            closeHint();
+        }
+
+        function renderBoard() {
+            const cells = document.querySelectorAll('.sudoku-cell');
+            cells.forEach((cell, index) => {
+                const row = Math.floor(index / 9);
+                const col = index % 9;
+                const value = userBoard[row][col];
+
+                cell.value = value === 0 ? '' : value;
+                cell.classList.remove('given', 'error', 'hint-target', 'hint-related');
+
+                if (puzzle[row][col] !== 0) {
+                    cell.classList.add('given');
+                    cell.disabled = true;
+                } else {
+                    cell.disabled = false;
                 }
             });
         }
-        
-        function renderChatHistory() {
-            chatHistoryContainer.innerHTML = '';
-            const chatIds = Object.keys(chats).sort((a, b) => chats[b].timestamp - chats[a].timestamp);
-            chatIds.forEach(chatId => {
-                const chat = chats[chatId];
-                const item = document.createElement('div');
-                item.className = 'chat-history-item p-2 rounded-md cursor-pointer hover:bg-gray-700/50 transition duration-200 text-gray-400 font-medium text-sm';
-                item.dataset.chatId = chatId;
-                item.textContent = chat.title;
-                item.onclick = () => selectChat(chatId);
-                chatHistoryContainer.appendChild(item);
-            });
+
+        // Timer
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                seconds++;
+                document.getElementById('timer').textContent = formatTime(seconds);
+            }, 1000);
         }
 
-        function renderMessages(messages) {
-            chatMessagesContainer.innerHTML = '';
-            if (!messages || messages.length === 0) {
-                 chatMessagesContainer.innerHTML = `<div class="text-center text-gray-600 h-full flex flex-col items-center justify-center">
-                    <svg class="w-24 h-24 mb-4 text-gray-700"><use xlink:href="#grok-icon"/></svg>
-                    <h2 class="text-2xl font-bold text-gray-400">${translations[currentLanguage].welcome_message}</h2>
-                 </div>`;
-                 return;
-            }
-            messages.forEach(msg => addMessageToUI(msg.role, msg.content));
+        function formatTime(secs) {
+            const mins = Math.floor(secs / 60);
+            const s = secs % 60;
+            return `${mins.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
-        
-        function addMessageToUI(role, content, isStreaming = false) {
-            const messageWrapper = document.createElement('div');
-            const roleName = role === 'user' ? translations[currentLanguage].user_role : translations[currentLanguage].assistant_role;
-            
-            let messageContentHTML = '';
-            if (Array.isArray(content)) {
-                 content.forEach(part => {
-                     if (part.type === 'text') {
-                         messageContentHTML += marked.parse(part.text);
-                     } else if (part.type === 'file') {
-                         messageContentHTML += `<div class="bg-gray-800 border border-gray-700 p-2 rounded-md my-2 text-sm">${translations[currentLanguage].attached_file}: ${part.puter_path.split('/').pop()}</div>`;
-                     }
-                 });
+
+        // Cell Selection and Input
+        function selectCell(row, col) {
+            document.querySelectorAll('.sudoku-cell').forEach(c => c.classList.remove('selected'));
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add('selected');
+            selectedCell = { row, col };
+        }
+
+        function handleInput(e, row, col) {
+            const value = e.target.value;
+
+            if (value === '' || /^[1-9]$/.test(value)) {
+                if (notesMode && value !== '') {
+                    // Notes mode - store multiple possible numbers
+                    const key = `${row}-${col}`;
+                    if (!cellNotes[key]) cellNotes[key] = new Set();
+
+                    if (cellNotes[key].has(value)) {
+                        cellNotes[key].delete(value);
+                    } else {
+                        cellNotes[key].add(value);
+                    }
+
+                    e.target.value = Array.from(cellNotes[key]).sort().join('');
+                    e.target.style.fontSize = '0.6rem';
+                } else {
+                    // Normal mode
+                    userBoard[row][col] = value === '' ? 0 : parseInt(value);
+
+                    if (value !== '') {
+                        // Clear notes for this cell
+                        delete cellNotes[`${row}-${col}`];
+                        e.target.style.fontSize = '1.5rem';
+
+                        // Validate
+                        if (parseInt(value) !== solution[row][col]) {
+                            e.target.classList.add('error');
+                            setTimeout(() => e.target.classList.remove('error'), 500);
+                        } else {
+                            e.target.classList.remove('error');
+                            checkWin();
+                        }
+                    }
+                }
             } else {
-                 messageContentHTML = marked.parse(content);
+                e.target.value = userBoard[row][col] === 0 ? '' : userBoard[row][col];
             }
-
-            const iconHTML = role === 'user' 
-                ? `<svg class="w-8 h-8 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"></path></svg>`
-                : `<div class="w-8 h-8 flex items-center justify-center rounded-full gradient-button"><svg class="w-5 h-5 text-white"><use xlink:href="#grok-icon"/></svg></div>`;
-
-            messageWrapper.className = `flex items-start space-x-4 mb-6 message-wrapper max-w-4xl mx-auto ${role}`;
-            messageWrapper.innerHTML = `
-                <div class="flex-shrink-0 mt-1">${iconHTML}</div>
-                <div class="flex-1">
-                    <p class="font-bold mb-2 text-white">${roleName}</p>
-                    <div class="prose prose-invert max-w-none message-content">${messageContentHTML}</div>
-                </div>
-            `;
-            
-            if (isStreaming) messageWrapper.dataset.streaming = "true";
-
-            chatMessagesContainer.appendChild(messageWrapper);
-            scrollToBottom();
         }
-        
-        // --- Message Sending and AI Interaction ---
 
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        function handleKeydown(e, row, col) {
+            const key = e.key;
+            if (key >= '1' && key <= '9') {
+                // Allow number input
+            } else if (key === 'Backspace' || key === 'Delete') {
+                userBoard[row][col] = 0;
+                e.target.value = '';
+                delete cellNotes[`${row}-${col}`];
+                e.target.style.fontSize = '1.5rem';
+            } else if (key === 'ArrowUp' && row > 0) {
                 e.preventDefault();
-                sendMessage();
+                selectCell(row - 1, col);
+            } else if (key === 'ArrowDown' && row < 8) {
+                e.preventDefault();
+                selectCell(row + 1, col);
+            } else if (key === 'ArrowLeft' && col > 0) {
+                e.preventDefault();
+                selectCell(row, col - 1);
+            } else if (key === 'ArrowRight' && col < 8) {
+                e.preventDefault();
+                selectCell(row, col + 1);
             }
-        });
+        }
 
-        async function sendMessage() {
-            const userInput = messageInput.value.trim();
-            if (!userInput && !attachedFile) return;
-            if (!activeChatId) {
-                alert(translations[currentLanguage].chat_select_fail);
+        function selectNumber(num) {
+            if (!selectedCell) {
+                alert('Please select a cell first!');
                 return;
             }
 
-            const currentChat = chats[activeChatId];
-            const userMessageContent = [];
-            if (attachedFile) {
-                userMessageContent.push({ type: 'file', puter_path: attachedFile.path });
-            }
-            if (userInput) {
-                userMessageContent.push({ type: 'text', text: userInput });
-            }
+            const { row, col } = selectedCell;
+            if (puzzle[row][col] !== 0) return; // Can't change given numbers
 
-            const userMessage = { role: 'user', content: userMessageContent };
-            
-            if (currentChat.messages.length === 0 && userInput) {
-                currentChat.title = userInput.substring(0, 30) + (userInput.length > 30 ? '...' : '');
-                renderChatHistory();
-                selectChat(activeChatId);
-            }
-            
-            currentChat.messages.push(userMessage);
-            addMessageToUI(userMessage.role, userMessage.content);
-            
-            const apiMessages = [];
-            const systemPrompt = systemPromptInput.value.trim();
-            if (systemPrompt) apiMessages.push({ role: 'system', content: systemPrompt });
-            
-            apiMessages.push(...currentChat.messages.map(m => {
-                if (Array.isArray(m.content) && m.content.length === 1 && m.content[0].type === 'text') {
-                    return { role: m.role, content: m.content[0].text };
-                }
-                return m;
-            }));
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
 
-            messageInput.value = '';
-            messageInput.style.height = 'auto';
-            attachedFile = null;
-            updateAttachmentUI();
-            
-            addMessageToUI('assistant', `<svg class="w-6 h-6 spinner text-purple-400"><use xlink:href="#grok-icon"/></svg>`, true);
+            if (num === 0) {
+                userBoard[row][col] = 0;
+                cell.value = '';
+                delete cellNotes[`${row}-${col}`];
+                cell.style.fontSize = '1.5rem';
+            } else {
+                if (notesMode) {
+                    const key = `${row}-${col}`;
+                    if (!cellNotes[key]) cellNotes[key] = new Set();
 
-            try {
-                const stream = await puter.ai.chat(apiMessages, {
-                    model: 'x-ai/grok-4',
-                    stream: true
-                });
-
-                let fullResponse = '';
-                const streamingMessageDiv = document.querySelector('[data-streaming="true"] .message-content');
-
-                for await (const part of stream) {
-                    fullResponse += part?.text || '';
-                    if (streamingMessageDiv) {
-                        streamingMessageDiv.innerHTML = marked.parse(fullResponse + '▍');
+                    if (cellNotes[key].has(num.toString())) {
+                        cellNotes[key].delete(num.toString());
+                    } else {
+                        cellNotes[key].add(num.toString());
                     }
-                    scrollToBottom();
-                }
-                
-                if (streamingMessageDiv) {
-                     streamingMessageDiv.innerHTML = marked.parse(fullResponse);
-                     streamingMessageDiv.parentElement.parentElement.removeAttribute('data-streaming');
-                }
 
-                currentChat.messages.push({ role: 'assistant', content: fullResponse });
-                await saveChats();
+                    cell.value = Array.from(cellNotes[key]).sort().join('');
+                    cell.style.fontSize = '0.6rem';
+                } else {
+                    userBoard[row][col] = num;
+                    cell.value = num;
+                    delete cellNotes[`${row}-${col}`];
+                    cell.style.fontSize = '1.5rem';
 
-            } catch (error) {
-                console.error('Error calling AI:', error);
-                const errorDiv = document.querySelector('[data-streaming="true"] .message-content');
-                if(errorDiv) {
-                    errorDiv.innerHTML = `<p class="text-red-400"><strong>${translations[currentLanguage].error_prefix}:</strong> ${error.message}</p>`;
-                    errorDiv.parentElement.parentElement.removeAttribute('data-streaming');
+                    if (num !== solution[row][col]) {
+                        cell.classList.add('error');
+                        setTimeout(() => cell.classList.remove('error'), 500);
+                    } else {
+                        checkWin();
+                    }
                 }
             }
         }
 
-        // --- File Attachment ---
-        
-        attachFileButton.addEventListener('click', async () => {
-            try {
-                const fileHandle = await puter.ui.showOpenFilePicker();
-                if (fileHandle) {
-                    updateAttachmentUI(translations[currentLanguage].loading_file);
-                    const fileContent = await fileHandle.read();
-                    const puterFile = await puter.fs.write(`grok_attachments/${Date.now()}_${fileHandle.name}`, fileContent, { createMissingParents: true });
-                    attachedFile = puterFile;
-                    updateAttachmentUI(puterFile.name);
+        function toggleNotesMode() {
+            notesMode = !notesMode;
+            const btn = document.getElementById('notes-btn');
+            if (notesMode) {
+                btn.classList.remove('bg-gray-700');
+                btn.classList.add('bg-purple-600');
+            } else {
+                btn.classList.add('bg-gray-700');
+                btn.classList.remove('bg-purple-600');
+            }
+        }
+
+        // Smart Hint System
+        function getHint(level) {
+            closeHint();
+
+            // Find an empty cell
+            let emptyCells = [];
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (userBoard[row][col] === 0) {
+                        emptyCells.push({ row, col });
+                    }
                 }
-            } catch (error) {
-                console.error('File picking or upload failed:', error);
-                alert(`${translations[currentLanguage].file_attach_fail} ${error.message}`);
-                updateAttachmentUI();
             }
-        });
-        
-        function updateAttachmentUI(fileName = null) {
-            attachmentIndicatorContainer.innerHTML = '';
-            if (fileName) {
-                const attachmentIndicator = document.createElement('div');
-                attachmentIndicator.className = 'bg-purple-600/20 text-purple-300 text-xs px-3 py-1 rounded-full inline-flex items-center';
-                attachmentIndicator.innerHTML = `
-                    <span>${fileName}</span>
-                    <button id="remove-attachment" class="ml-2 text-purple-200 hover:text-white">&times;</button>
-                `;
-                attachmentIndicatorContainer.appendChild(attachmentIndicator);
-                document.getElementById('remove-attachment').onclick = () => {
-                    attachedFile = null;
-                    updateAttachmentUI();
-                };
+
+            if (emptyCells.length === 0) {
+                showHint('Complete!', 'The puzzle is already solved!', null, null);
+                return;
+            }
+
+            // Pick a random empty cell
+            const targetCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const { row, col } = targetCell;
+            const correctNum = solution[row][col];
+
+            hintsUsed++;
+            stats.totalHintsUsed++;
+            updateHintDisplay();
+
+            // Clear previous highlights
+            document.querySelectorAll('.sudoku-cell').forEach(c => {
+                c.classList.remove('hint-target', 'hint-related');
+            });
+
+            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+            cell.classList.add('hint-target');
+            selectCell(row, col);
+
+            if (level === 1) {
+                // Gentle Nudge - just highlight the area
+                highlightRelatedCells(row, col);
+                showHint(
+                    '💡 Gentle Nudge',
+                    `Look at row ${row + 1}, column ${col + 1}. What numbers are already used in this row, column, and 3×3 box? The missing number will fit here.`,
+                    row, col
+                );
+            } else if (level === 2) {
+                // Show Technique - explain the logic
+                highlightRelatedCells(row, col);
+                const explanation = generateExplanation(row, col, correctNum);
+                showHint(
+                    '🎯 Technique Explanation',
+                    explanation,
+                    row, col
+                );
+            } else if (level === 3) {
+                // Show Answer - reveal the number with full explanation
+                const explanation = generateExplanation(row, col, correctNum);
+                showHint(
+                    '✅ Answer Revealed',
+                    `The answer is <strong class="text-3xl text-green-400">${correctNum}</strong>.<br><br>${explanation}<br><br>The number has been filled in for you.`,
+                    row, col
+                );
+
+                // Fill in the answer
+                setTimeout(() => {
+                    userBoard[row][col] = correctNum;
+                    cell.value = correctNum;
+                    cell.style.fontSize = '1.5rem';
+                    checkWin();
+                }, 1000);
             }
         }
 
-        // --- Utility Functions ---
-        
-        function scrollToBottom() {
-            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        function generateExplanation(row, col, num) {
+            const rowNums = new Set();
+            const colNums = new Set();
+            const boxNums = new Set();
+
+            // Get numbers in row
+            for (let c = 0; c < 9; c++) {
+                if (userBoard[row][c] !== 0) rowNums.add(userBoard[row][c]);
+            }
+
+            // Get numbers in column
+            for (let r = 0; r < 9; r++) {
+                if (userBoard[r][col] !== 0) colNums.add(userBoard[r][col]);
+            }
+
+            // Get numbers in box
+            const boxRow = Math.floor(row / 3) * 3;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let r = boxRow; r < boxRow + 3; r++) {
+                for (let c = boxCol; c < boxCol + 3; c++) {
+                    if (userBoard[r][c] !== 0) boxNums.add(userBoard[r][c]);
+                }
+            }
+
+            const allNums = new Set([...rowNums, ...colNums, ...boxNums]);
+            const possibleNums = [1,2,3,4,5,6,7,8,9].filter(n => !allNums.has(n));
+
+            let explanation = `<strong>Here's the logic:</strong><br><br>`;
+            explanation += `📍 <strong>Row ${row + 1}</strong> already has: ${Array.from(rowNums).sort().join(', ') || 'none'}<br>`;
+            explanation += `📍 <strong>Column ${col + 1}</strong> already has: ${Array.from(colNums).sort().join(', ') || 'none'}<br>`;
+            explanation += `📍 <strong>3×3 Box</strong> already has: ${Array.from(boxNums).sort().join(', ') || 'none'}<br><br>`;
+
+            if (possibleNums.length === 1) {
+                explanation += `✨ Only <strong>${num}</strong> can go here - it's the only number from 1-9 that's not already in the row, column, or box!`;
+            } else {
+                explanation += `🤔 Possible numbers: ${possibleNums.join(', ')}<br>`;
+                explanation += `✨ But <strong>${num}</strong> is the correct one based on the complete puzzle logic.`;
+            }
+
+            return explanation;
         }
 
-        messageInput.addEventListener('input', () => {
-            messageInput.style.height = 'auto';
-            const newHeight = Math.min(messageInput.scrollHeight, 200);
-            messageInput.style.height = newHeight + 'px';
-        });
-
-        systemPromptInput.addEventListener('change', () => {
-            if (activeChatId && chats[activeChatId]) {
-                chats[activeChatId].systemPrompt = systemPromptInput.value;
-                saveChats();
+        function highlightRelatedCells(row, col) {
+            // Highlight row
+            for (let c = 0; c < 9; c++) {
+                if (c !== col) {
+                    const cell = document.querySelector(`[data-row="${row}"][data-col="${c}"]`);
+                    cell.classList.add('hint-related');
+                }
             }
-        });
 
+            // Highlight column
+            for (let r = 0; r < 9; r++) {
+                if (r !== row) {
+                    const cell = document.querySelector(`[data-row="${r}"][data-col="${col}"]`);
+                    cell.classList.add('hint-related');
+                }
+            }
+
+            // Highlight box
+            const boxRow = Math.floor(row / 3) * 3;
+            const boxCol = Math.floor(col / 3) * 3;
+            for (let r = boxRow; r < boxRow + 3; r++) {
+                for (let c = boxCol; c < boxCol + 3; c++) {
+                    if (r !== row || c !== col) {
+                        const cell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        cell.classList.add('hint-related');
+                    }
+                }
+            }
+        }
+
+        function showHint(title, text, row, col) {
+            document.getElementById('hint-title').innerHTML = title;
+            document.getElementById('hint-text').innerHTML = text;
+            document.getElementById('hint-panel').classList.remove('hidden');
+        }
+
+        function closeHint() {
+            document.getElementById('hint-panel').classList.add('hidden');
+            document.querySelectorAll('.sudoku-cell').forEach(c => {
+                c.classList.remove('hint-target', 'hint-related');
+            });
+        }
+
+        function updateHintDisplay() {
+            document.getElementById('hint-count').textContent = hintsUsed;
+            const percentage = Math.min((hintsUsed / 10) * 100, 100);
+            document.getElementById('hint-bar').style.width = percentage + '%';
+        }
+
+        // Solution Checking
+        function checkSolution() {
+            let correct = 0;
+            let total = 0;
+            let errors = [];
+
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (puzzle[row][col] === 0) {
+                        total++;
+                        if (userBoard[row][col] === solution[row][col]) {
+                            correct++;
+                        } else if (userBoard[row][col] !== 0) {
+                            errors.push({ row, col });
+                        }
+                    }
+                }
+            }
+
+            // Highlight errors briefly
+            errors.forEach(({ row, col }) => {
+                const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                cell.classList.add('error');
+                setTimeout(() => cell.classList.remove('error'), 1500);
+            });
+
+            const percentage = Math.round((correct / total) * 100);
+
+            if (errors.length === 0 && correct === total) {
+                showHint('🎉 Perfect!', 'All your answers are correct! Keep going!', null, null);
+            } else if (errors.length === 0) {
+                showHint('✅ Looking Good!', `${percentage}% complete! No errors so far. Keep going!`, null, null);
+            } else {
+                showHint('❌ Errors Found', `Found ${errors.length} error(s). They've been highlighted in red. Don't worry, mistakes are part of learning!`, null, null);
+            }
+        }
+
+        function checkWin() {
+            for (let row = 0; row < 9; row++) {
+                for (let col = 0; col < 9; col++) {
+                    if (userBoard[row][col] !== solution[row][col]) {
+                        return false;
+                    }
+                }
+            }
+
+            // Win!
+            clearInterval(timerInterval);
+            stats.gamesCompleted++;
+
+            // Update best time
+            const timeKey = 'bestTime' + currentDifficulty.charAt(0).toUpperCase() + currentDifficulty.slice(1);
+            if (!stats[timeKey] || seconds < stats[timeKey]) {
+                stats[timeKey] = seconds;
+            }
+
+            saveStats();
+            updateStatsDisplay();
+
+            showHint(
+                '🎊 Congratulations!',
+                `<div class="text-center">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <div class="text-2xl font-bold mb-2">Puzzle Solved!</div>
+                    <div class="text-lg text-purple-300 mb-4">Time: ${formatTime(seconds)}</div>
+                    <div class="text-sm text-gray-300">Hints used: ${hintsUsed}</div>
+                    <div class="text-sm text-gray-300">Total games completed: ${stats.gamesCompleted}</div>
+                </div>`,
+                null, null
+            );
+
+            return true;
+        }
+
+        // Start the game
+        init();
     </script>
 </body>
 </html>
