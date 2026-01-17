@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate PWA Icons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a2e;
+            color: white;
+        }
+        h1 { color: #667eea; }
+        .icon-preview {
+            display: inline-block;
+            margin: 20px;
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            display: block;
+            margin: 10px auto;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        .instructions {
+            background: #2a2a3e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Sudoku Master - Icon Generator</h1>
+    <p>Click the buttons below to download the required PWA icons.</p>
+
+    <div class="icon-preview">
+        <h3>192x192 Icon</h3>
+        <canvas id="canvas192" width="192" height="192"></canvas>
+        <button onclick="downloadIcon(192)">Download icon-192.png</button>
+    </div>
+
+    <div class="icon-preview">
+        <h3>512x512 Icon</h3>
+        <canvas id="canvas512" width="512" height="512"></canvas>
+        <button onclick="downloadIcon(512)">Download icon-512.png</button>
+    </div>
+
+    <div class="instructions">
+        <h2>📋 Instructions:</h2>
+        <ol>
+            <li>Click both download buttons above to save the icons</li>
+            <li>Place the downloaded <code>icon-192.png</code> and <code>icon-512.png</code> in your project root</li>
+            <li>Your PWA is ready! Open index.html on your Android device's browser</li>
+            <li>Tap the menu (⋮) and select "Install app" or "Add to Home Screen"</li>
+            <li>The app will be installed like a native Android app!</li>
+        </ol>
+    </div>
+
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+
+            // Background
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, size, size);
+
+            // Gradient circle
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size * 0.43, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Sudoku grid
+            const gridSize = size * 0.55;
+            const startX = (size - gridSize) / 2;
+            const startY = size * 0.27;
+            const cellSize = gridSize / 9;
+
+            ctx.strokeStyle = '#ffffff';
+
+            // Thin lines
+            ctx.lineWidth = size * 0.003;
+            for (let i = 1; i < 9; i++) {
+                if (i % 3 !== 0) {
+                    // Vertical
+                    ctx.beginPath();
+                    ctx.moveTo(startX + i * cellSize, startY);
+                    ctx.lineTo(startX + i * cellSize, startY + cellSize * 6);
+                    ctx.stroke();
+
+                    // Horizontal
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY + i * cellSize);
+                    ctx.lineTo(startX + gridSize, startY + i * cellSize);
+                    ctx.stroke();
+                }
+            }
+
+            // Thick lines for 3x3 boxes
+            ctx.lineWidth = size * 0.008;
+            ctx.strokeRect(startX, startY, gridSize, cellSize * 6);
+
+            for (let i = 3; i <= 6; i += 3) {
+                // Vertical
+                ctx.beginPath();
+                ctx.moveTo(startX + i * cellSize, startY);
+                ctx.lineTo(startX + i * cellSize, startY + cellSize * 6);
+                ctx.stroke();
+
+                // Horizontal (only for row 2 and 4)
+                if (i === 3) {
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY + 2 * cellSize);
+                    ctx.lineTo(startX + gridSize, startY + 2 * cellSize);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY + 4 * cellSize);
+                    ctx.lineTo(startX + gridSize, startY + 4 * cellSize);
+                    ctx.stroke();
+                }
+            }
+
+            // Sample numbers
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${size * 0.06}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const numbers = [
+                { num: '5', x: 0.5, y: 0.5 },
+                { num: '3', x: 3.5, y: 0.5 },
+                { num: '7', x: 6.5, y: 1.5 },
+                { num: '6', x: 1.5, y: 2.5 },
+                { num: '9', x: 4.5, y: 2.5 },
+                { num: '2', x: 7.5, y: 2.5 },
+                { num: '8', x: 2.5, y: 4.5 },
+                { num: '1', x: 3.5, y: 5.5 },
+                { num: '4', x: 7.5, y: 5.5 }
+            ];
+
+            numbers.forEach(({ num, x, y }) => {
+                ctx.fillText(num, startX + x * cellSize, startY + y * cellSize);
+            });
+        }
+
+        // Draw icons on page load
+        drawIcon(document.getElementById('canvas192'));
+        drawIcon(document.getElementById('canvas512'));
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    </script>
+</body>
+</html>

@@ -2,8 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sudoku Master - Learn & Play</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Learn Sudoku with intelligent hints and explanations">
+    <meta name="theme-color" content="#667eea">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sudoku Master">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
@@ -836,6 +853,54 @@
 
         // Start the game
         init();
+
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registration successful:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install banner (you can customize this)
+            const installBanner = document.createElement('div');
+            installBanner.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg shadow-2xl z-50 flex items-center gap-3';
+            installBanner.innerHTML = `
+                <span>📱 Install Sudoku Master as an app!</span>
+                <button id="install-btn" class="bg-white text-purple-600 px-4 py-1 rounded font-bold hover:bg-gray-100 transition">Install</button>
+                <button id="dismiss-install" class="text-white hover:text-gray-200">&times;</button>
+            `;
+            document.body.appendChild(installBanner);
+
+            document.getElementById('install-btn').addEventListener('click', async () => {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installBanner.remove();
+            });
+
+            document.getElementById('dismiss-install').addEventListener('click', () => {
+                installBanner.remove();
+            });
+        });
+
+        // Detect when app is installed
+        window.addEventListener('appinstalled', () => {
+            console.log('Sudoku Master has been installed!');
+            deferredPrompt = null;
+        });
     </script>
 </body>
 </html>
