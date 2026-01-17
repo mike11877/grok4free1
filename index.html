@@ -63,6 +63,14 @@
             box-shadow: 0 0 0 3px #3b82f6;
         }
 
+        .sudoku-cell.highlighted {
+            background: #374151 !important;
+        }
+
+        .sudoku-cell.same-number {
+            background: #4c1d95 !important;
+        }
+
         .thick-border-right {
             border-right: 3px solid #4b5563 !important;
         }
@@ -457,7 +465,7 @@
                 const value = userBoard[row][col];
 
                 cell.value = value === 0 ? '' : value;
-                cell.classList.remove('given', 'error', 'hint-target', 'hint-related');
+                cell.classList.remove('given', 'error', 'hint-target', 'hint-related', 'highlighted', 'same-number');
 
                 if (puzzle[row][col] !== 0) {
                     cell.classList.add('given');
@@ -485,10 +493,53 @@
 
         // Cell Selection and Input
         function selectCell(row, col) {
-            document.querySelectorAll('.sudoku-cell').forEach(c => c.classList.remove('selected'));
+            // Clear all previous highlights
+            document.querySelectorAll('.sudoku-cell').forEach(c => {
+                c.classList.remove('selected', 'highlighted', 'same-number');
+            });
+
             const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
             cell.classList.add('selected');
             selectedCell = { row, col };
+
+            // Get the value of the selected cell
+            const selectedValue = userBoard[row][col];
+
+            // Highlight row, column, and box
+            for (let i = 0; i < 9; i++) {
+                // Highlight row
+                const rowCell = document.querySelector(`[data-row="${row}"][data-col="${i}"]`);
+                if (i !== col) rowCell.classList.add('highlighted');
+
+                // Highlight column
+                const colCell = document.querySelector(`[data-row="${i}"][data-col="${col}"]`);
+                if (i !== row) colCell.classList.add('highlighted');
+            }
+
+            // Highlight 3x3 box
+            const boxStartRow = Math.floor(row / 3) * 3;
+            const boxStartCol = Math.floor(col / 3) * 3;
+            for (let r = boxStartRow; r < boxStartRow + 3; r++) {
+                for (let c = boxStartCol; c < boxStartCol + 3; c++) {
+                    if (r !== row || c !== col) {
+                        const boxCell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                        boxCell.classList.add('highlighted');
+                    }
+                }
+            }
+
+            // Highlight cells with the same number
+            if (selectedValue !== 0) {
+                for (let r = 0; r < 9; r++) {
+                    for (let c = 0; c < 9; c++) {
+                        if (userBoard[r][c] === selectedValue && (r !== row || c !== col)) {
+                            const sameCell = document.querySelector(`[data-row="${r}"][data-col="${c}"]`);
+                            sameCell.classList.remove('highlighted');
+                            sameCell.classList.add('same-number');
+                        }
+                    }
+                }
+            }
         }
 
         function handleInput(e, row, col) {
@@ -526,6 +577,11 @@
                             checkWin();
                         }
                     }
+                }
+
+                // Refresh highlights to show same numbers
+                if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
+                    selectCell(row, col);
                 }
             } else {
                 e.target.value = userBoard[row][col] === 0 ? '' : userBoard[row][col];
@@ -599,6 +655,9 @@
                     }
                 }
             }
+
+            // Refresh highlights to show same numbers
+            selectCell(row, col);
         }
 
         function toggleNotesMode() {
