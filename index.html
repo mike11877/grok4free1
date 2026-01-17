@@ -31,7 +31,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0a0a;
             min-height: 100vh;
         }
 
@@ -43,75 +43,82 @@
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
+            background: #1a1a1a;
             border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid #333;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         }
 
         .sudoku-cell {
             aspect-ratio: 1;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background: rgba(255, 255, 255, 0.95);
-            color: #1a1a2e;
-            font-weight: 600;
-            border-radius: 4px;
-            font-size: 1.75rem;
+            background: white;
+            color: #000;
+            font-weight: 700;
+            border-radius: 6px;
+            font-size: 2rem;
+            border: 2px solid #e5e5e5;
         }
 
         .sudoku-cell:hover:not(.given):not(:disabled) {
-            background: rgba(255, 255, 255, 1) !important;
-            transform: scale(1.08);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            background: #f5f5f5 !important;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             z-index: 10;
+            border-color: #999;
         }
 
         .sudoku-cell.given {
-            background: rgba(102, 126, 234, 0.15);
-            color: #667eea;
-            font-weight: 700;
+            background: #f0f0f0;
+            color: #666;
+            font-weight: 600;
         }
 
         .sudoku-cell.error {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+            background: #ff4444 !important;
             color: white !important;
             animation: shake 0.4s cubic-bezier(.36,.07,.19,.97);
+            border-color: #cc0000;
         }
 
         .sudoku-cell.hint-target {
-            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%) !important;
+            background: #4CAF50 !important;
             color: white !important;
             animation: pulse 1.5s ease-in-out infinite;
-            box-shadow: 0 0 20px rgba(81, 207, 102, 0.5);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.6);
+            border-color: #388E3C;
         }
 
         .sudoku-cell.hint-related {
-            background: rgba(102, 126, 234, 0.2) !important;
+            background: #e8e8e8 !important;
+            border-color: #ccc;
         }
 
         .sudoku-cell.selected {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            background: #333 !important;
             color: white !important;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3), 0 8px 24px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 0 0 3px #666, 0 8px 24px rgba(0, 0, 0, 0.4);
             transform: scale(1.05);
+            border-color: #666;
         }
 
         .sudoku-cell.highlighted {
-            background: rgba(102, 126, 234, 0.12) !important;
+            background: #f5f5f5 !important;
+            border-color: #ddd;
         }
 
         .sudoku-cell.same-number {
-            background: rgba(118, 75, 162, 0.25) !important;
-            font-weight: 700;
+            background: #d0d0d0 !important;
+            font-weight: 800;
+            border-color: #999;
         }
 
         .thick-border-right {
-            border-right: 3px solid rgba(102, 126, 234, 0.4) !important;
+            border-right: 3px solid #666 !important;
         }
 
         .thick-border-bottom {
-            border-bottom: 3px solid rgba(102, 126, 234, 0.4) !important;
+            border-bottom: 3px solid #666 !important;
         }
 
         @keyframes shake {
@@ -149,20 +156,22 @@
 
         .hint-panel {
             animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(102, 126, 234, 0.3);
+            background: #2a2a2a;
+            border: 2px solid #444;
         }
 
         .gradient-button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #fff;
+            color: #000;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+            font-weight: 800;
         }
 
         .gradient-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
+            background: #f5f5f5;
         }
 
         .gradient-button:active {
@@ -175,35 +184,34 @@
             border-radius: 12px;
             font-size: 0.875rem;
             font-weight: 700;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
             animation: fadeIn 0.3s ease;
         }
 
         .easy {
-            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+            background: #4CAF50;
             color: white;
         }
         .medium {
-            background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
-            color: #1a1a2e;
+            background: #FFA726;
+            color: white;
         }
         .hard {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            background: #EF5350;
             color: white;
         }
 
         .number-btn {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: #2a2a2a;
+            border: 2px solid #444;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .number-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.4);
+            background: #3a3a3a;
+            border-color: #666;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
         }
 
         .number-btn:active {
@@ -213,25 +221,22 @@
         .stat-value {
             font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #fff;
         }
 
         .hint-btn {
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid #444;
             transition: all 0.3s ease;
         }
 
         .hint-btn:hover {
-            border-color: rgba(255, 255, 255, 0.4);
+            border-color: #666;
             transform: translateX(4px);
         }
 
         #sudoku-grid {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+            background: #151515;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
@@ -239,10 +244,10 @@
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-6 md:mb-10">
-            <h1 class="text-4xl md:text-6xl font-black mb-3 text-white drop-shadow-2xl">
-                ✨ Sudoku Master
+            <h1 class="text-4xl md:text-6xl font-black mb-3 text-white">
+                Sudoku Master
             </h1>
-            <p class="text-white/80 text-sm md:text-lg font-medium">Learn with intelligent hints and beautiful design</p>
+            <p class="text-gray-400 text-sm md:text-lg font-medium">Learn Sudoku with intelligent hints</p>
         </div>
 
         <div class="grid lg:grid-cols-3 gap-6">
@@ -252,13 +257,13 @@
                 <div class="card p-5 md:p-6">
                     <div class="flex justify-between items-center mb-5">
                         <div>
-                            <span class="text-white/60 text-xs font-semibold uppercase tracking-wider">Difficulty</span>
+                            <span class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Difficulty</span>
                             <div class="mt-2">
                                 <span id="difficulty-display" class="difficulty-badge easy">Easy</span>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="text-white/60 text-xs font-semibold uppercase tracking-wider">Time</span>
+                            <span class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Time</span>
                             <div id="timer" class="stat-value mt-2">00:00</div>
                         </div>
                     </div>
@@ -292,7 +297,7 @@
                 <!-- Hint System Card -->
                 <div class="card p-5 md:p-6">
                     <h3 class="text-xl font-black mb-2 text-white">💡 Smart Hints</h3>
-                    <p class="text-sm text-white/70 mb-4 font-medium">Progressive help when stuck</p>
+                    <p class="text-sm text-gray-400 mb-4 font-medium">Progressive help when stuck</p>
 
                     <div class="space-y-2">
                         <button onclick="getHint(1)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
@@ -306,13 +311,13 @@
                         </button>
                     </div>
 
-                    <div class="mt-5 p-4 bg-black/20 rounded-xl backdrop-blur-sm">
-                        <div class="flex justify-between text-xs text-white/70 mb-2 font-semibold">
+                    <div class="mt-5 p-4 bg-black rounded-xl">
+                        <div class="flex justify-between text-xs text-gray-400 mb-2 font-semibold">
                             <span>HINTS USED</span>
                             <span id="hint-count" class="text-white">0</span>
                         </div>
-                        <div class="w-full bg-white/10 rounded-full h-2.5">
-                            <div id="hint-bar" class="bg-gradient-to-r from-purple-400 to-pink-400 h-2.5 rounded-full transition-all shadow-lg" style="width: 0%"></div>
+                        <div class="w-full bg-gray-800 rounded-full h-2.5">
+                            <div id="hint-bar" class="bg-white h-2.5 rounded-full transition-all shadow-lg" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -322,15 +327,15 @@
                     <h3 class="text-xl font-black mb-4 text-white">📊 Your Progress</h3>
                     <div class="space-y-3 text-sm">
                         <div class="flex justify-between items-center">
-                            <span class="text-white/70 font-semibold">Games Completed</span>
+                            <span class="text-gray-400 font-semibold">Games Completed</span>
                             <span id="games-completed" class="stat-value text-lg">0</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-white/70 font-semibold">Best Time (Easy)</span>
+                            <span class="text-gray-400 font-semibold">Best Time (Easy)</span>
                             <span id="best-time-easy" class="stat-value text-lg">--:--</span>
                         </div>
                         <div class="flex justify-between items-center">
-                            <span class="text-white/70 font-semibold">Learning Level</span>
+                            <span class="text-gray-400 font-semibold">Learning Level</span>
                             <span id="learning-level" class="stat-value text-lg">Beginner</span>
                         </div>
                     </div>
@@ -350,9 +355,9 @@
                             <div class="text-4xl mr-4">🎓</div>
                             <div class="flex-1">
                                 <h4 id="hint-title" class="text-xl font-black mb-3 text-white">Hint</h4>
-                                <p id="hint-text" class="text-white/90 leading-relaxed font-medium"></p>
+                                <p id="hint-text" class="text-gray-200 leading-relaxed font-medium"></p>
                             </div>
-                            <button onclick="closeHint()" class="text-white/60 hover:text-white text-3xl leading-none font-bold">&times;</button>
+                            <button onclick="closeHint()" class="text-gray-400 hover:text-white text-3xl leading-none font-bold">&times;</button>
                         </div>
                     </div>
 
