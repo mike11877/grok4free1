@@ -107,6 +107,12 @@ Edit these values in `manifest.json` to customize:
 - `theme_color`: Brand color
 - `background_color`: Splash screen color
 
+## 📋 Version
+
+**v1.0.0** - Initial release
+
+See [CHANGELOG.md](CHANGELOG.md) for full version history.
+
 ## 📝 License
 
 Free to use and modify!
