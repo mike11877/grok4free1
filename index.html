@@ -23,77 +23,118 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
         .sudoku-cell {
             aspect-ratio: 1;
-            transition: all 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.95);
+            color: #1a1a2e;
+            font-weight: 600;
+            border-radius: 4px;
+            font-size: 1.75rem;
         }
 
         .sudoku-cell:hover:not(.given):not(:disabled) {
-            background: #374151 !important;
-            transform: scale(1.05);
+            background: rgba(255, 255, 255, 1) !important;
+            transform: scale(1.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 10;
         }
 
         .sudoku-cell.given {
-            background: #1f2937;
-            color: #9ca3af;
-            font-weight: 600;
+            background: rgba(102, 126, 234, 0.15);
+            color: #667eea;
+            font-weight: 700;
         }
 
         .sudoku-cell.error {
-            background: #991b1b !important;
-            animation: shake 0.3s;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%) !important;
+            color: white !important;
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97);
         }
 
         .sudoku-cell.hint-target {
-            background: #065f46 !important;
-            animation: pulse 1s infinite;
+            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%) !important;
+            color: white !important;
+            animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(81, 207, 102, 0.5);
         }
 
         .sudoku-cell.hint-related {
-            background: #1e3a5f !important;
+            background: rgba(102, 126, 234, 0.2) !important;
         }
 
         .sudoku-cell.selected {
-            background: #1e40af !important;
-            box-shadow: 0 0 0 3px #3b82f6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.3), 0 8px 24px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
         }
 
         .sudoku-cell.highlighted {
-            background: #374151 !important;
+            background: rgba(102, 126, 234, 0.12) !important;
         }
 
         .sudoku-cell.same-number {
-            background: #4c1d95 !important;
+            background: rgba(118, 75, 162, 0.25) !important;
+            font-weight: 700;
         }
 
         .thick-border-right {
-            border-right: 3px solid #4b5563 !important;
+            border-right: 3px solid rgba(102, 126, 234, 0.4) !important;
         }
 
         .thick-border-bottom {
-            border-bottom: 3px solid #4b5563 !important;
+            border-bottom: 3px solid rgba(102, 126, 234, 0.4) !important;
         }
 
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            0%, 100% { transform: translateX(0) scale(1); }
+            25% { transform: translateX(-8px) scale(1.02); }
+            75% { transform: translateX(8px) scale(1.02); }
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            50% {
+                opacity: 0.85;
+                transform: scale(1.08);
+            }
         }
 
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-20px);
             }
             to {
                 opacity: 1;
@@ -101,135 +142,196 @@
             }
         }
 
-        .hint-panel {
-            animation: slideIn 0.3s ease;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .notes-mode .sudoku-cell {
-            font-size: 0.6rem;
-            line-height: 1;
+        .hint-panel {
+            animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(102, 126, 234, 0.3);
         }
 
         .gradient-button {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
         .gradient-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .gradient-button:active {
+            transform: translateY(-1px);
         }
 
         .difficulty-badge {
             display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
         }
 
-        .easy { background: #065f46; color: #d1fae5; }
-        .medium { background: #c2410c; color: #fed7aa; }
-        .hard { background: #991b1b; color: #fecaca; }
+        .easy {
+            background: linear-gradient(135deg, #51cf66 0%, #37b24d 100%);
+            color: white;
+        }
+        .medium {
+            background: linear-gradient(135deg, #ffd43b 0%, #fab005 100%);
+            color: #1a1a2e;
+        }
+        .hard {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+        }
+
+        .number-btn {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .number-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .number-btn:active {
+            transform: scale(0.95);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hint-btn {
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .hint-btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateX(4px);
+        }
+
+        #sudoku-grid {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen p-4">
+<body class="text-white min-h-screen p-3 md:p-6">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Sudoku Master
+        <div class="text-center mb-6 md:mb-10">
+            <h1 class="text-4xl md:text-6xl font-black mb-3 text-white drop-shadow-2xl">
+                ✨ Sudoku Master
             </h1>
-            <p class="text-gray-400">Learn Sudoku with intelligent hints and explanations</p>
+            <p class="text-white/80 text-sm md:text-lg font-medium">Learn with intelligent hints and beautiful design</p>
         </div>
 
         <div class="grid lg:grid-cols-3 gap-6">
             <!-- Left Panel - Controls -->
             <div class="space-y-4 order-2 lg:order-1">
                 <!-- Game Info Card -->
-                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="card p-5 md:p-6">
+                    <div class="flex justify-between items-center mb-5">
                         <div>
-                            <span class="text-gray-400 text-sm">Difficulty</span>
-                            <div class="mt-1">
+                            <span class="text-white/60 text-xs font-semibold uppercase tracking-wider">Difficulty</span>
+                            <div class="mt-2">
                                 <span id="difficulty-display" class="difficulty-badge easy">Easy</span>
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-400 text-sm">Time</span>
-                            <div id="timer" class="text-2xl font-bold text-purple-400 mt-1">00:00</div>
+                            <span class="text-white/60 text-xs font-semibold uppercase tracking-wider">Time</span>
+                            <div id="timer" class="stat-value mt-2">00:00</div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 mb-4">
-                        <button onclick="startNewGame('easy')" class="bg-green-900 hover:bg-green-800 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
+                        <button onclick="startNewGame('easy')" class="number-btn text-white py-3 px-3 rounded-xl text-xs font-bold">
                             Easy
                         </button>
-                        <button onclick="startNewGame('medium')" class="bg-orange-900 hover:bg-orange-800 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
+                        <button onclick="startNewGame('medium')" class="number-btn text-white py-3 px-3 rounded-xl text-xs font-bold">
                             Medium
                         </button>
-                        <button onclick="startNewGame('hard')" class="bg-red-900 hover:bg-red-800 text-white py-2 px-3 rounded-lg text-sm font-semibold transition">
+                        <button onclick="startNewGame('hard')" class="number-btn text-white py-3 px-3 rounded-xl text-xs font-bold">
                             Hard
                         </button>
                     </div>
 
-                    <button onclick="startNewGame(currentDifficulty)" class="w-full gradient-button text-white font-bold py-3 px-6 rounded-lg mb-2">
-                        New Game
+                    <button onclick="startNewGame(currentDifficulty)" class="w-full gradient-button text-white font-bold py-4 px-6 rounded-xl mb-3 text-base">
+                        🎮 New Game
                     </button>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="toggleNotesMode()" id="notes-btn" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                        <button onclick="toggleNotesMode()" id="notes-btn" class="number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
                             📝 Notes
                         </button>
-                        <button onclick="checkSolution()" class="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                        <button onclick="checkSolution()" class="number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
                             ✓ Check
                         </button>
                     </div>
                 </div>
 
                 <!-- Hint System Card -->
-                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-                    <h3 class="text-lg font-bold mb-3 text-purple-400">💡 Smart Hints</h3>
-                    <p class="text-sm text-gray-400 mb-4">Get progressive help when you're stuck</p>
+                <div class="card p-5 md:p-6">
+                    <h3 class="text-xl font-black mb-2 text-white">💡 Smart Hints</h3>
+                    <p class="text-sm text-white/70 mb-4 font-medium">Progressive help when stuck</p>
 
                     <div class="space-y-2">
-                        <button onclick="getHint(1)" class="w-full bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                        <button onclick="getHint(1)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
                             1️⃣ Gentle Nudge
                         </button>
-                        <button onclick="getHint(2)" class="w-full bg-indigo-900 hover:bg-indigo-800 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                        <button onclick="getHint(2)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
                             2️⃣ Show Technique
                         </button>
-                        <button onclick="getHint(3)" class="w-full bg-purple-900 hover:bg-purple-800 text-white py-2 px-4 rounded-lg text-sm font-semibold transition">
+                        <button onclick="getHint(3)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
                             3️⃣ Show Answer
                         </button>
                     </div>
 
-                    <div class="mt-4 p-3 bg-gray-900 rounded-lg">
-                        <div class="flex justify-between text-xs text-gray-400 mb-1">
-                            <span>Hints Used</span>
-                            <span id="hint-count">0</span>
+                    <div class="mt-5 p-4 bg-black/20 rounded-xl backdrop-blur-sm">
+                        <div class="flex justify-between text-xs text-white/70 mb-2 font-semibold">
+                            <span>HINTS USED</span>
+                            <span id="hint-count" class="text-white">0</span>
                         </div>
-                        <div class="w-full bg-gray-700 rounded-full h-2">
-                            <div id="hint-bar" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all" style="width: 0%"></div>
+                        <div class="w-full bg-white/10 rounded-full h-2.5">
+                            <div id="hint-bar" class="bg-gradient-to-r from-purple-400 to-pink-400 h-2.5 rounded-full transition-all shadow-lg" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Card -->
-                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-                    <h3 class="text-lg font-bold mb-3 text-purple-400">📊 Your Progress</h3>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Games Completed</span>
-                            <span id="games-completed" class="font-bold">0</span>
+                <div class="card p-5 md:p-6">
+                    <h3 class="text-xl font-black mb-4 text-white">📊 Your Progress</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/70 font-semibold">Games Completed</span>
+                            <span id="games-completed" class="stat-value text-lg">0</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Best Time (Easy)</span>
-                            <span id="best-time-easy" class="font-bold">--:--</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/70 font-semibold">Best Time (Easy)</span>
+                            <span id="best-time-easy" class="stat-value text-lg">--:--</span>
                         </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-400">Learning Level</span>
-                            <span id="learning-level" class="font-bold text-purple-400">Beginner</span>
+                        <div class="flex justify-between items-center">
+                            <span class="text-white/70 font-semibold">Learning Level</span>
+                            <span id="learning-level" class="stat-value text-lg">Beginner</span>
                         </div>
                     </div>
                 </div>
@@ -237,38 +339,38 @@
 
             <!-- Center Panel - Sudoku Grid -->
             <div class="lg:col-span-2 order-1 lg:order-2">
-                <div class="bg-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
-                    <div id="sudoku-grid" class="grid grid-cols-9 gap-0 mb-6 bg-gray-700 p-1 rounded-lg">
+                <div class="card p-4 md:p-6">
+                    <div id="sudoku-grid" class="grid grid-cols-9 gap-1 mb-6 p-3 md:p-4 rounded-2xl">
                         <!-- Grid will be generated by JavaScript -->
                     </div>
 
                     <!-- Hint Display Panel -->
-                    <div id="hint-panel" class="hidden hint-panel bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500 rounded-xl p-6 mb-4">
+                    <div id="hint-panel" class="hidden hint-panel rounded-2xl p-5 md:p-6 mb-5">
                         <div class="flex items-start">
-                            <div class="text-3xl mr-4">🎓</div>
+                            <div class="text-4xl mr-4">🎓</div>
                             <div class="flex-1">
-                                <h4 id="hint-title" class="text-lg font-bold mb-2 text-purple-300">Hint</h4>
-                                <p id="hint-text" class="text-gray-200 leading-relaxed"></p>
+                                <h4 id="hint-title" class="text-xl font-black mb-3 text-white">Hint</h4>
+                                <p id="hint-text" class="text-white/90 leading-relaxed font-medium"></p>
                             </div>
-                            <button onclick="closeHint()" class="text-gray-400 hover:text-white text-2xl leading-none">&times;</button>
+                            <button onclick="closeHint()" class="text-white/60 hover:text-white text-3xl leading-none font-bold">&times;</button>
                         </div>
                     </div>
 
                     <!-- Number Pad -->
                     <div class="grid grid-cols-9 gap-2">
-                        <button onclick="selectNumber(1)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">1</button>
-                        <button onclick="selectNumber(2)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">2</button>
-                        <button onclick="selectNumber(3)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">3</button>
-                        <button onclick="selectNumber(4)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">4</button>
-                        <button onclick="selectNumber(5)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">5</button>
-                        <button onclick="selectNumber(6)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">6</button>
-                        <button onclick="selectNumber(7)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">7</button>
-                        <button onclick="selectNumber(8)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">8</button>
-                        <button onclick="selectNumber(9)" class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-4 rounded-lg transition transform hover:scale-105">9</button>
+                        <button onclick="selectNumber(1)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">1</button>
+                        <button onclick="selectNumber(2)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">2</button>
+                        <button onclick="selectNumber(3)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">3</button>
+                        <button onclick="selectNumber(4)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">4</button>
+                        <button onclick="selectNumber(5)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">5</button>
+                        <button onclick="selectNumber(6)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">6</button>
+                        <button onclick="selectNumber(7)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">7</button>
+                        <button onclick="selectNumber(8)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">8</button>
+                        <button onclick="selectNumber(9)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">9</button>
                     </div>
 
-                    <button onclick="selectNumber(0)" class="w-full mt-2 bg-red-900 hover:bg-red-800 text-white font-bold py-3 rounded-lg transition">
-                        Clear Cell
+                    <button onclick="selectNumber(0)" class="w-full mt-3 number-btn text-white font-bold py-4 rounded-xl text-base">
+                        🗑️ Clear Cell
                     </button>
                 </div>
             </div>
@@ -457,8 +559,10 @@
             badge.textContent = difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
             badge.className = 'difficulty-badge ' + difficulty;
 
-            document.getElementById('notes-btn').classList.remove('bg-purple-600');
-            document.getElementById('notes-btn').classList.add('bg-gray-700');
+            // Reset notes button
+            const notesBtn = document.getElementById('notes-btn');
+            notesBtn.classList.remove('gradient-button');
+            notesBtn.classList.add('number-btn');
 
             generateSudoku();
             renderBoard();
@@ -684,11 +788,11 @@
             notesMode = !notesMode;
             const btn = document.getElementById('notes-btn');
             if (notesMode) {
-                btn.classList.remove('bg-gray-700');
-                btn.classList.add('bg-purple-600');
+                btn.classList.remove('number-btn');
+                btn.classList.add('gradient-button');
             } else {
-                btn.classList.add('bg-gray-700');
-                btn.classList.remove('bg-purple-600');
+                btn.classList.add('number-btn');
+                btn.classList.remove('gradient-button');
             }
         }
 
