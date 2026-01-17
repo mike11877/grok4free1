@@ -21,7 +21,18 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-192.png">
 
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {}
+            },
+            daisyui: {
+                themes: ["business"]
+            }
+        }
+    </script>
     <style>
         * {
             margin: 0;
@@ -240,7 +251,7 @@
         }
     </style>
 </head>
-<body class="text-white min-h-screen p-3 md:p-6">
+<body data-theme="business" class="min-h-screen p-3 md:p-6">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="text-center mb-6 md:mb-10">
@@ -254,7 +265,8 @@
             <!-- Left Panel - Controls -->
             <div class="space-y-4 order-2 lg:order-1">
                 <!-- Game Info Card -->
-                <div class="card p-5 md:p-6">
+                <div class="card bg-base-200 shadow-xl">
+                    <div class="card-body p-5 md:p-6">
                     <div class="flex justify-between items-center mb-5">
                         <div>
                             <span class="text-gray-400 text-xs font-semibold uppercase tracking-wider">Difficulty</span>
@@ -269,74 +281,77 @@
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 mb-4">
-                        <button onclick="startNewGame('easy')" class="number-btn text-white py-3 px-3 rounded-xl text-xs font-bold">
+                        <button onclick="startNewGame('easy')" class="btn btn-sm btn-outline">
                             Easy
                         </button>
-                        <button onclick="startNewGame('medium')" class="number-btn text-white py-3 px-3 rounded-xl text-xs font-bold">
+                        <button onclick="startNewGame('medium')" class="btn btn-sm btn-outline">
                             Medium
                         </button>
-                        <button onclick="startNewGame('hard')" class="number-btn text-white py-3 px-3 rounded-xl text-xs font-bold">
+                        <button onclick="startNewGame('hard')" class="btn btn-sm btn-outline">
                             Hard
                         </button>
                     </div>
 
-                    <button onclick="startNewGame(currentDifficulty)" class="w-full gradient-button text-white font-bold py-4 px-6 rounded-xl mb-3 text-base">
+                    <button onclick="startNewGame(currentDifficulty)" class="btn btn-primary w-full mb-3">
                         🎮 New Game
                     </button>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="toggleNotesMode()" id="notes-btn" class="number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
+                        <button onclick="toggleNotesMode()" id="notes-btn" class="btn btn-ghost">
                             📝 Notes
                         </button>
-                        <button onclick="checkSolution()" class="number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
+                        <button onclick="checkSolution()" class="btn btn-ghost">
                             ✓ Check
                         </button>
+                    </div>
                     </div>
                 </div>
 
                 <!-- Hint System Card -->
-                <div class="card p-5 md:p-6">
-                    <h3 class="text-xl font-black mb-2 text-white">💡 Smart Hints</h3>
-                    <p class="text-sm text-gray-400 mb-4 font-medium">Progressive help when stuck</p>
+                <div class="card bg-base-200 shadow-xl">
+                    <div class="card-body p-5 md:p-6">
+                        <h3 class="card-title text-xl">💡 Smart Hints</h3>
+                        <p class="text-sm opacity-70 mb-4">Progressive help when stuck</p>
 
-                    <div class="space-y-2">
-                        <button onclick="getHint(1)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
-                            1️⃣ Gentle Nudge
-                        </button>
-                        <button onclick="getHint(2)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
-                            2️⃣ Show Technique
-                        </button>
-                        <button onclick="getHint(3)" class="hint-btn w-full number-btn text-white py-3 px-4 rounded-xl text-sm font-bold">
-                            3️⃣ Show Answer
-                        </button>
-                    </div>
-
-                    <div class="mt-5 p-4 bg-black rounded-xl">
-                        <div class="flex justify-between text-xs text-gray-400 mb-2 font-semibold">
-                            <span>HINTS USED</span>
-                            <span id="hint-count" class="text-white">0</span>
+                        <div class="space-y-2">
+                            <button onclick="getHint(1)" class="btn btn-outline btn-sm w-full">
+                                1️⃣ Gentle Nudge
+                            </button>
+                            <button onclick="getHint(2)" class="btn btn-outline btn-sm w-full">
+                                2️⃣ Show Technique
+                            </button>
+                            <button onclick="getHint(3)" class="btn btn-outline btn-sm w-full">
+                                3️⃣ Show Answer
+                            </button>
                         </div>
-                        <div class="w-full bg-gray-800 rounded-full h-2.5">
-                            <div id="hint-bar" class="bg-white h-2.5 rounded-full transition-all shadow-lg" style="width: 0%"></div>
+
+                        <div class="mt-5">
+                            <div class="flex justify-between text-xs mb-2 font-semibold">
+                                <span class="opacity-70">HINTS USED</span>
+                                <span id="hint-count">0</span>
+                            </div>
+                            <progress id="hint-bar" class="progress progress-primary w-full" value="0" max="100"></progress>
                         </div>
                     </div>
                 </div>
 
                 <!-- Stats Card -->
-                <div class="card p-5 md:p-6">
-                    <h3 class="text-xl font-black mb-4 text-white">📊 Your Progress</h3>
-                    <div class="space-y-3 text-sm">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-semibold">Games Completed</span>
-                            <span id="games-completed" class="stat-value text-lg">0</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-semibold">Best Time (Easy)</span>
-                            <span id="best-time-easy" class="stat-value text-lg">--:--</span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-400 font-semibold">Learning Level</span>
-                            <span id="learning-level" class="stat-value text-lg">Beginner</span>
+                <div class="card bg-base-200 shadow-xl">
+                    <div class="card-body p-5 md:p-6">
+                        <h3 class="card-title text-xl">📊 Your Progress</h3>
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-70 font-semibold">Games Completed</span>
+                                <span id="games-completed" class="stat-value text-lg font-bold">0</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-70 font-semibold">Best Time (Easy)</span>
+                                <span id="best-time-easy" class="stat-value text-lg font-bold">--:--</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="opacity-70 font-semibold">Learning Level</span>
+                                <span id="learning-level" class="badge badge-lg badge-primary">Beginner</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -344,39 +359,41 @@
 
             <!-- Center Panel - Sudoku Grid -->
             <div class="lg:col-span-2 order-1 lg:order-2">
-                <div class="card p-4 md:p-6">
+                <div class="card bg-base-200 shadow-xl">
+                    <div class="card-body p-4 md:p-6">
                     <div id="sudoku-grid" class="grid grid-cols-9 gap-1 mb-6 p-3 md:p-4 rounded-2xl">
                         <!-- Grid will be generated by JavaScript -->
                     </div>
 
                     <!-- Hint Display Panel -->
-                    <div id="hint-panel" class="hidden hint-panel rounded-2xl p-5 md:p-6 mb-5">
-                        <div class="flex items-start">
+                    <div id="hint-panel" class="hidden alert mb-5 hint-panel">
+                        <div class="flex items-start w-full">
                             <div class="text-4xl mr-4">🎓</div>
                             <div class="flex-1">
-                                <h4 id="hint-title" class="text-xl font-black mb-3 text-white">Hint</h4>
-                                <p id="hint-text" class="text-gray-200 leading-relaxed font-medium"></p>
+                                <h4 id="hint-title" class="text-xl font-bold mb-3">Hint</h4>
+                                <p id="hint-text" class="leading-relaxed opacity-90"></p>
                             </div>
-                            <button onclick="closeHint()" class="text-gray-400 hover:text-white text-3xl leading-none font-bold">&times;</button>
+                            <button onclick="closeHint()" class="btn btn-sm btn-circle btn-ghost">&times;</button>
                         </div>
                     </div>
 
                     <!-- Number Pad -->
                     <div class="grid grid-cols-9 gap-2">
-                        <button onclick="selectNumber(1)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">1</button>
-                        <button onclick="selectNumber(2)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">2</button>
-                        <button onclick="selectNumber(3)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">3</button>
-                        <button onclick="selectNumber(4)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">4</button>
-                        <button onclick="selectNumber(5)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">5</button>
-                        <button onclick="selectNumber(6)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">6</button>
-                        <button onclick="selectNumber(7)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">7</button>
-                        <button onclick="selectNumber(8)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">8</button>
-                        <button onclick="selectNumber(9)" class="number-btn text-white font-black text-xl py-4 md:py-5 rounded-xl">9</button>
+                        <button onclick="selectNumber(1)" class="btn btn-lg btn-outline font-black">1</button>
+                        <button onclick="selectNumber(2)" class="btn btn-lg btn-outline font-black">2</button>
+                        <button onclick="selectNumber(3)" class="btn btn-lg btn-outline font-black">3</button>
+                        <button onclick="selectNumber(4)" class="btn btn-lg btn-outline font-black">4</button>
+                        <button onclick="selectNumber(5)" class="btn btn-lg btn-outline font-black">5</button>
+                        <button onclick="selectNumber(6)" class="btn btn-lg btn-outline font-black">6</button>
+                        <button onclick="selectNumber(7)" class="btn btn-lg btn-outline font-black">7</button>
+                        <button onclick="selectNumber(8)" class="btn btn-lg btn-outline font-black">8</button>
+                        <button onclick="selectNumber(9)" class="btn btn-lg btn-outline font-black">9</button>
                     </div>
 
-                    <button onclick="selectNumber(0)" class="w-full mt-3 number-btn text-white font-bold py-4 rounded-xl text-base">
+                    <button onclick="selectNumber(0)" class="btn btn-secondary btn-block mt-3">
                         🗑️ Clear Cell
                     </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -566,8 +583,7 @@
 
             // Reset notes button
             const notesBtn = document.getElementById('notes-btn');
-            notesBtn.classList.remove('gradient-button');
-            notesBtn.classList.add('number-btn');
+            notesBtn.classList.remove('btn-active');
 
             generateSudoku();
             renderBoard();
@@ -793,11 +809,9 @@
             notesMode = !notesMode;
             const btn = document.getElementById('notes-btn');
             if (notesMode) {
-                btn.classList.remove('number-btn');
-                btn.classList.add('gradient-button');
+                btn.classList.add('btn-active');
             } else {
-                btn.classList.add('number-btn');
-                btn.classList.remove('gradient-button');
+                btn.classList.remove('btn-active');
             }
         }
 
@@ -962,7 +976,7 @@
         function updateHintDisplay() {
             document.getElementById('hint-count').textContent = hintsUsed;
             const percentage = Math.min((hintsUsed / 10) * 100, 100);
-            document.getElementById('hint-bar').style.width = percentage + '%';
+            document.getElementById('hint-bar').value = percentage;
         }
 
         // Solution Checking
