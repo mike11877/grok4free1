@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#99000000">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="32dp"
+        android:orientation="vertical"
+        android:background="@drawable/rounded_card"
+        android:padding="32dp"
+        android:gravity="center">
+
+        <!-- Warning icon -->
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_warning"
+            android:tint="@color/status_warning"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/tvWarningTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time Check"
+            android:textColor="@color/text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvTimeSpent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="15m"
+            android:textColor="@color/status_warning"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:id="@+id/tvWarningMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="You've been scrolling for a while.\nConsider taking a break."
+            android:textColor="@color/text_secondary"
+            android:textSize="16sp"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.3"
+            android:layout_marginBottom="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnDismissWarning"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="@string/dismiss"
+            android:textSize="16sp"
+            android:backgroundTint="@color/status_warning" />
+    </LinearLayout>
+</FrameLayout>

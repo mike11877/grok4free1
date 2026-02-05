@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">DoomScroll Preventer</string>
+
+    <!-- Navigation -->
+    <string name="nav_dashboard">Dashboard</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_title">Your Screen Time</string>
+    <string name="daily">Daily</string>
+    <string name="weekly">Weekly</string>
+    <string name="monthly">Monthly</string>
+    <string name="per_app_breakdown">Per-App Breakdown</string>
+    <string name="no_data">No usage data yet</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="monitoring">Monitoring</string>
+    <string name="enable_monitoring">Enable Monitoring</string>
+    <string name="time_limits">Time Limits</string>
+    <string name="warning_at">Warning at</string>
+    <string name="block_at">Block at</string>
+    <string name="permissions">Permissions</string>
+    <string name="accessibility_service">Accessibility Service</string>
+    <string name="overlay_permission">Overlay Permission</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="monitored_apps">Monitored Apps</string>
+
+    <!-- Overlays -->
+    <string name="warning_title">Time Check</string>
+    <string name="block_title">Time\'s Up</string>
+    <string name="dismiss">Got it</string>
+    <string name="close_app">Close App</string>
+
+    <!-- Onboarding -->
+    <string name="skip">Skip</string>
+    <string name="next">Next</string>
+    <string name="get_started">Get Started</string>
+</resources>

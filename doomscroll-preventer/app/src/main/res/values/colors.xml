@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Core palette -->
+    <color name="primary">#6C63FF</color>
+    <color name="primary_dark">#5A52D5</color>
+    <color name="primary_light">#8B85FF</color>
+    <color name="secondary">#00BFA6</color>
+    <color name="secondary_dark">#009688</color>
+
+    <!-- Backgrounds -->
+    <color name="bg_dark">#0D1117</color>
+    <color name="bg_surface">#161B22</color>
+    <color name="bg_card">#1C2128</color>
+    <color name="bg_elevated">#21262D</color>
+
+    <!-- Text -->
+    <color name="text_primary">#F0F6FC</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="text_muted">#484F58</color>
+
+    <!-- Status -->
+    <color name="status_good">#3FB950</color>
+    <color name="status_warning">#D29922</color>
+    <color name="status_danger">#F85149</color>
+
+    <!-- Overlay -->
+    <color name="overlay_warning_bg">#E6201A23</color>
+    <color name="overlay_block_bg">#F00D1117</color>
+
+    <!-- Chart bar -->
+    <color name="chart_bar">#6C63FF</color>
+    <color name="chart_bar_light">#8B85FF</color>
+
+    <!-- Misc -->
+    <color name="divider">#30363D</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>
