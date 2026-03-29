@@ -1,0 +1,48 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Background - fills entire icon for maskable -->
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0a0a0a;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <rect width="512" height="512" fill="url(#grad)"/>
+
+  <!-- Centered content in safe zone (80% = 410px, centered at 256) -->
+  <!-- Safe zone: 51 to 461 -->
+
+  <!-- Sudoku Grid Background -->
+  <rect x="106" y="106" width="300" height="300" rx="20" fill="#1f1f1f"/>
+
+  <!-- Sudoku Grid -->
+  <g stroke="#444" stroke-width="1" fill="none">
+    <!-- Thin lines -->
+    <line x1="206" y1="116" x2="206" y2="396"/>
+    <line x1="306" y1="116" x2="306" y2="396"/>
+    <line x1="116" y1="206" x2="396" y2="206"/>
+    <line x1="116" y1="306" x2="396" y2="306"/>
+  </g>
+
+  <!-- Thick lines for 3x3 boxes -->
+  <g stroke="#666" stroke-width="3" fill="none">
+    <rect x="116" y="116" width="280" height="280" rx="12"/>
+    <line x1="209.33" y1="116" x2="209.33" y2="396"/>
+    <line x1="302.67" y1="116" x2="302.67" y2="396"/>
+    <line x1="116" y1="209.33" x2="396" y2="209.33"/>
+    <line x1="116" y1="302.67" x2="396" y2="302.67"/>
+  </g>
+
+  <!-- Sample numbers -->
+  <g fill="#ffffff" font-family="Arial, sans-serif" font-size="42" font-weight="bold" text-anchor="middle">
+    <text x="163" y="175">5</text>
+    <text x="256" y="175">3</text>
+    <text x="349" y="175">7</text>
+    <text x="163" y="268">6</text>
+    <text x="256" y="268">9</text>
+    <text x="349" y="268">2</text>
+    <text x="163" y="361">8</text>
+    <text x="256" y="361">1</text>
+    <text x="349" y="361">4</text>
+  </g>
+</svg>
